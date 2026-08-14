@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Diagram from '../../components/content/Diagram.astro';
+import Kind from '../../components/Kind.astro';
 import { routes } from '../../lib/url';
 
 const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.data.order);
@@ -39,6 +40,7 @@ const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.dat
             href={routes.case(c.id)}
           >
             <span>
+              <span style="display:block;margin-bottom:6px"><Kind kind="case" /></span>
               <span class="t" style={`color:var(--${c.data.tone}-ink)`}>{c.data.title}</span>
               <span class="d" style="display:block;margin-top:4px">{c.data.summary}</span>
               <span class="meta">{c.data.field} · دليلها: {c.data.evidence}</span>

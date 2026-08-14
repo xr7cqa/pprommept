@@ -132,8 +132,11 @@ async function main() {
     const page = await newPage(browser);
     const ctx = browser.defaultBrowserContext();
     await ctx.overridePermissions(SITE, ['clipboard-read', 'clipboard-write']);
+    // الفهرس صار مجموعات لا بطاقات، فيُدخل إلى برومبت عبر صفحة منصة
     await page.goto(SITE + 'prompts/', { waitUntil: 'networkidle0' });
-    const href = await page.$eval('#list > a', (a) => a.href);
+    const groupHref = await page.$eval('#browse a[href*="/platform/"]', (a) => a.href);
+    await page.goto(groupHref, { waitUntil: 'networkidle0' });
+    const href = await page.$eval('.lesson-card', (a) => a.href);
     await page.goto(href, { waitUntil: 'networkidle0' });
 
     await page.click('[data-fav]');

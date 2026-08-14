@@ -50,11 +50,9 @@ const current = Astro.url.pathname;
     }
 
     <nav aria-label="مكتبات الكورس" style="display:grid;gap:var(--sp-2);margin-top:var(--sp-5)">
-      <a class="btn btn--quiet" href={routes.map()}>خريطة المسار</a>
-      <a class="btn btn--quiet" href={routes.platforms()}>مكتبة المنصات</a>
-      <a class="btn btn--quiet" href={routes.prompts()}>مكتبة البرومبتات</a>
-      <a class="btn btn--quiet" href={routes.cases()}>دراسات الحالة</a>
-      <a class="btn btn--quiet" href={routes.apps()}>القوالب والتطبيقات</a>
+      <a class="btn btn--quiet" href={routes.map()}>المسار الأساسي</a>
+      <a class="btn btn--quiet" href={routes.library()}>مكتبة التطبيق</a>
+      <a class="btn btn--quiet" href={routes.start()}>ابدأ من هنا</a>
     </nav>
   </div>
 </dialog>

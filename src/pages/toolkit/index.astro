@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import { routes } from '../../lib/url';
+import Kind from '../../components/Kind.astro';
 
 const items = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order);
 ---
@@ -27,6 +28,7 @@ const items = (await getCollection('apps')).sort((a, b) => a.data.order - b.data
         items.map((a) => (
           <a class="stage-card" style={`background:var(--${a.data.tone}-bg)`} href={routes.app(a.id)}>
             <span>
+              <span style="display:block;margin-bottom:6px"><Kind kind="template" /></span>
               <span class="t" style={`color:var(--${a.data.tone}-ink)`}>{a.data.title}</span>
               <span class="d" style="display:block;margin-top:4px">{a.data.summary}</span>
               <span class="meta">تخرج بـ: {a.data.outcome}</span>

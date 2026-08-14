@@ -44,19 +44,19 @@ const outputs = [
   <section class="page-hero" style="background:linear-gradient(180deg,var(--s1-bg),var(--paper))">
     <div class="wrap">
       <p class="eyebrow">كورس تطبيقي · سبع مراحل</p>
-      <h1>
-        عندك خبرة،<br />
-        وما تعرف <span style="color:var(--acc)">وش تنشر</span>
-      </h1>
+      <h1>أهلا بك في كورس صناعة المحتوى بالذكاء الاصطناعي</h1>
       <p class="lead">
-        تدخل ومعك مهنة أو مشروع أو معرفة تراها عادية، وتخرج بنظام محتوى مكتوب على مجالك أنت،
-        وحساب مجهز من الاسم إلى المنشور المثبت، وأول خمس عشرة قطعة جاهزة للنشر
+        سنبدأ معك من أول خطوة، من اختيار المجال وفهم الجمهور وتجهيز الحساب، ثم ننتقل إلى
+        العثور على أفكار تستحق النشر وتحويلها بمساعدة الذكاء الاصطناعي إلى منشورات وصور
+        وفيديوهات تناسب كل منصة، مع تطبيق كل ما تتعلمه مباشرة على مجالك حتى تصنع محتواك بنفسك
       </p>
       <div class="btn-row" style="margin-top:var(--sp-6);max-width:30rem">
         <a class="btn" href={firstHref} id="start-btn">ابدأ الكورس</a>
-        <a class="btn btn--ghost" href={routes.map()}>شاهد خريطة الكورس</a>
+        <a class="btn btn--ghost" href={routes.start()}>كيف تستخدم الكورس</a>
       </div>
 
+      {/* شريط تقدم للاطلاع فقط — الدعوة إلى المتابعة في الزر أعلاه وحده،
+          حتى لا تتكرر الرسالة نفسها ولا الزر في الصفحة */}
       <div class="entry-card" id="entry-card" hidden>
         <div class="entry-ring" aria-hidden="true">
           <svg viewBox="0 0 44 44" width="64" height="64">
@@ -71,11 +71,9 @@ const outputs = [
           <span class="entry-ring-pct num" id="ring-pct">0%</span>
         </div>
         <div style="flex:1;min-inline-size:0">
-          <p class="eyebrow" style="margin-bottom:2px" id="entry-kicker">تابع من حيث توقفت</p>
           <p class="entry-title" id="entry-title"></p>
           <p class="small muted" style="margin:0" id="entry-meta"></p>
         </div>
-        <a class="btn btn--sm" href={firstHref} id="entry-btn">أكمل</a>
       </div>
     </div>
   </section>
@@ -156,34 +154,28 @@ const outputs = [
   </section>
 
   <section class="wrap" style="margin-top:var(--sp-8)">
-    <h2>ومعك ثلاث مكتبات مفتوحة طول الوقت</h2>
-    <div class="grid grid-3" style="margin-top:var(--sp-5)">
-      <a class="stage-card" style="background:var(--s6-bg)" href={routes.platforms()}>
-        <span class="n" style="color:var(--s6-ink)"><Icon name="grid" size={26} /></span>
+    <h2>الكورس جزآن</h2>
+    <p class="muted">
+      مسار تمشي فيه بالترتيب، ومكتبة تفتحها وقت الحاجة. لست مطالبا بقراءة كل صفحة
+    </p>
+    <div class="grid grid-2" style="margin-top:var(--sp-5)">
+      <a class="stage-card" style="background:var(--s2-bg);align-items:flex-start" href={routes.map()}>
+        <span class="n" style="color:var(--s2-ink)"><Icon name="grid" size={26} /></span>
         <span>
-          <span class="t">مكتبة المنصات</span>
-          <span class="d" style="display:block">منطق {platforms.length} منصات وكيف تتغير الفكرة عند النقل</span>
+          <span class="t" style="color:var(--s2-ink)">المسار الأساسي</span>
+          <span class="d" style="display:block;margin-top:4px">
+            سبع مراحل بالترتيب، فيها {coreCount} درسا أساسيا يُحسب في تقدمك
+          </span>
         </span>
       </a>
-      <a class="stage-card" style="background:var(--s4-bg)" href={routes.prompts()}>
-        <span class="n" style="color:var(--s4-ink)"><Icon name="copy" size={26} /></span>
+      <a class="stage-card" style="background:var(--s6-bg);align-items:flex-start" href={routes.library()}>
+        <span class="n" style="color:var(--s6-ink)"><Icon name="copy" size={26} /></span>
         <span>
-          <span class="t">مكتبة البرومبتات</span>
-          <span class="d" style="display:block">{prompts.length} برومبتا مكتوبا لمهمة ومنصة محددة</span>
-        </span>
-      </a>
-      <a class="stage-card" style="background:var(--s3-bg)" href={routes.apps()}>
-        <span class="n" style="color:var(--s3-ink)"><Icon name="check" size={26} /></span>
-        <span>
-          <span class="t">القوالب والتطبيقات</span>
-          <span class="d" style="display:block">{apps.length} قوالب تملؤها فتخرج بمخرج حقيقي</span>
-        </span>
-      </a>
-      <a class="stage-card" style="background:var(--s7-bg)" href={routes.cases()}>
-        <span class="n" style="color:var(--s7-ink)"><Icon name="grid" size={26} /></span>
-        <span>
-          <span class="t">دراسات الحالة</span>
-          <span class="d" style="display:block">{cases.length} حالة مفصولة إلى موثق وتفسير ومبدأ</span>
+          <span class="t" style="color:var(--s6-ink)">مكتبة التطبيق</span>
+          <span class="d" style="display:block;margin-top:4px">
+            {prompts.length} برومبتا · {apps.length} قالبا · {cases.length} حالة ·
+            {platforms.length} كتيّب منصة · قاموس
+          </span>
         </span>
       </a>
     </div>
@@ -232,7 +224,19 @@ const outputs = [
 
     document.querySelectorAll<HTMLElement>('[data-needs-storage]').forEach((el) => (el.hidden = false));
 
-    /* بطاقة الدخول: تتحول بين البداية والمتابعة بحسب حالة المتعلم */
+    /* الزر الرئيسي وحده هو الدعوة: «ابدأ الكورس» قبل أي تقدم،
+       و«أكمل من حيث توقفت» بعد أن يفتح المتعلم درسا أو ينجزه */
+    {
+      const nextRow = H.stageTable.flatMap((st) => st.all).find((l) => !s.done[l.id]);
+      const target = s.last?.href ?? nextRow?.h ?? H.firstHref;
+      const start = document.getElementById('start-btn') as HTMLAnchorElement | null;
+      if (start && started) {
+        start.href = target;
+        start.textContent = 'أكمل من حيث توقفت';
+      }
+    }
+
+    /* شريط التقدم: يعرض أين وصل، بلا زر ولا تكرار للدعوة */
     const card = document.getElementById('entry-card');
     if (card && started) {
       card.hidden = false;
@@ -242,29 +246,12 @@ const outputs = [
       const pctEl = document.getElementById('ring-pct');
       if (pctEl) pctEl.textContent = `${pct}%`;
 
-      const nextRow = H.stageTable.flatMap((st) => st.all).find((l) => !s.done[l.id]);
-      const target = s.last?.href ?? nextRow?.h ?? H.firstHref;
-      const title = s.last?.title ?? 'ابدأ من الدرس الأول';
-
-      const kicker = document.getElementById('entry-kicker');
       const t = document.getElementById('entry-title');
       const meta = document.getElementById('entry-meta');
-      const btn = document.getElementById('entry-btn') as HTMLAnchorElement | null;
-      if (kicker) kicker.textContent = s.last ? 'أكمل من حيث توقفت' : 'ابدأ من الدرس الأول';
-      if (t) t.textContent = title;
+      if (t) t.textContent = s.last ? s.last.title : 'لم تفتح درسا بعد';
       if (meta) {
         meta.innerHTML =
           `أنجزت <span class="num">${doneCount}</span> من <span class="num">${H.coreIds.length}</span> درسا أساسيا`;
-      }
-      if (btn) {
-        btn.href = target;
-        btn.textContent = s.last ? 'أكمل الدرس' : 'ابدأ';
-      }
-
-      const start = document.getElementById('start-btn') as HTMLAnchorElement | null;
-      if (start && s.last) {
-        start.href = target;
-        start.textContent = 'أكمل من حيث توقفت';
       }
     }
 

@@ -1,0 +1,88 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import { routes } from '../../../lib/url';
+import { TASK_SLUG, TASK_NOTE, PLATFORM_SLUG, toneFor } from '../../../lib/prompt-groups';
+
+export async function getStaticPaths() {
+  const items = await getCollection('prompts');
+  const names = Object.keys(TASK_SLUG);
+  return names
+    .map((name, i) => ({
+      name,
+      slug: TASK_SLUG[name] as string,
+      tone: toneFor(i),
+      list: items.filter((p) => p.data.task === name).sort((a, b) => a.data.order - b.data.order),
+    }))
+    .filter((g) => g.list.length > 0)
+    .map((g) => ({
+      params: { slug: g.slug },
+      props: {
+        name: g.name,
+        tone: g.tone,
+        rows: g.list.map((p) => ({
+          id: p.id,
+          title: p.data.title,
+          when: p.data.when,
+          platform: p.data.platform,
+          href: routes.prompt(p.id),
+        })),
+      },
+    }));
+}
+
+const { name, tone, rows } = Astro.props;
+const note = TASK_NOTE[name] ?? '';
+
+/** مجمّعة بالمنصة، فيرى القارئ كيف تختلف نفس المهمة باختلاف المكان */
+const byPlatform = Object.keys(PLATFORM_SLUG)
+  .map((p) => ({ platform: p, list: rows.filter((r) => r.platform === p) }))
+  .filter((g) => g.list.length > 0);
+---
+
+<Base title={`برومبتات ${name}`} description={`برومبتات مهمة ${name}: ${note}`}>
+  <div class="page-hero" style={`background:var(--${tone}-bg)`}>
+    <div class="wrap">
+      <p class="eyebrow" style={`color:var(--${tone}-ink)`}>
+        <a href={routes.prompts()} style={`color:var(--${tone}-ink);text-decoration:none`}
+          >مكتبة البرومبتات</a
+        >
+      </p>
+      <h1>مهمة {name}</h1>
+      <p class="lead">{note}</p>
+      <p class="small muted" style="margin-top:var(--sp-4)">
+        {rows.length} برومبتا في {byPlatform.length} مجموعات
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <div class="box-note">
+      <p class="box-h">نفس المهمة تختلف باختلاف المنصة</p>
+      <p style="margin-bottom:0">
+        لهذا لكل منصة برومبتها هنا لا برومبت واحد عام. قارن بينها لترى كيف يتغير الطلب حين
+        يتغير المكان
+      </p>
+    </div>
+
+    {
+      byPlatform.map((g) => (
+        <section style="margin-top:var(--sp-6)">
+          <h2>{g.platform}</h2>
+          <div class="grid grid-2" style="margin-top:var(--sp-4)">
+            {g.list.map((p) => (
+              <a class="lesson-card" href={p.href} style="box-shadow:none">
+                <span class="t">{p.title}</span>
+                <span class="o">{p.when}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    <p style="margin-top:var(--sp-7)">
+      <a class="btn btn--quiet" href={routes.prompts()}>عد إلى مكتبة البرومبتات</a>
+    </p>
+  </div>
+</Base>

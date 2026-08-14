@@ -1,0 +1,128 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Kind from '../components/Kind.astro';
+import { routes } from '../lib/url';
+
+const platforms = await getCollection('platforms');
+const prompts = await getCollection('prompts');
+const apps = await getCollection('apps');
+const cases = await getCollection('cases');
+const glossary = await getCollection('glossary');
+const lessons = await getCollection('course');
+const appendix = lessons.find((l) => l.id === '26-appendix-tools');
+
+const shelves = [
+  {
+    title: 'مكتبة البرومبتات',
+    href: routes.prompts(),
+    count: `${prompts.length} برومبتا`,
+    note: 'ادخل من المنصة أو من المهمة. كل برومبت بمتغيراته ومعيار الحكم على مخرجه',
+    kind: 'prompt' as const,
+    tone: 's4',
+  },
+  {
+    title: 'القوالب',
+    href: routes.apps(),
+    count: `${apps.length} قالبا`,
+    note: 'حقول تملؤها فيخرج لك ملف يخصك، محفوظ في متصفحك وقابل للنسخ والتنزيل',
+    kind: 'template' as const,
+    tone: 's3',
+  },
+  {
+    title: 'دراسات الحالة',
+    href: routes.cases(),
+    count: `${cases.length} حالة`,
+    note: 'كل حالة على ثلاث طبقات: ما هو موثق، وقراءتنا له، والمبدأ الذي ينتقل إلى عملك',
+    kind: 'case' as const,
+    tone: 's5',
+  },
+  {
+    title: 'كتيبات المنصات',
+    href: routes.platforms(),
+    count: `${platforms.length} منصات`,
+    note: 'منطق كل منصة وصيغتها الأصلية وما يقتل الفكرة الجيدة عند النقل إليها',
+    kind: 'reference' as const,
+    tone: 's6',
+  },
+  {
+    title: 'قاموس المصطلحات',
+    href: routes.glossary(),
+    count: `${glossary.length} مصطلحا`,
+    note: 'كل مصطلح يظهر في الدروس مشروح هنا، ويُفتح داخل الدرس بلا مغادرته',
+    kind: 'reference' as const,
+    tone: 's2',
+  },
+  ...(appendix
+    ? [
+        {
+          title: 'ملحق الأدوات المؤرخ',
+          href: routes.lesson(appendix.id),
+          count: 'يُحدَّث وحده',
+          note: 'ما يتغير سريعا في أدوات الذكاء الاصطناعي، وكيف تتحقق منه بنفسك',
+          kind: 'reference' as const,
+          tone: 's1',
+        },
+      ]
+    : []),
+];
+---
+
+<Base
+  title="مكتبة التطبيق"
+  description="المراجع والمواد الاختيارية: برومبتات وقوالب ودراسات حالة وكتيبات منصات وقاموس"
+>
+  <section class="page-hero" style="background:var(--s6-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s6-ink)">الجزء الثاني من الكورس</p>
+      <h1>مكتبة التطبيق</h1>
+      <p class="lead">
+        هذه المواد لا تُقرأ بالترتيب ولا تدخل في حساب تقدمك. تفتحها حين يحيلك إليها درس، أو
+        حين تحتاجها في عملك فعلا
+      </p>
+      <p class="small muted" style="margin-top:var(--sp-4)">
+        المسار الأساسي في مكان آخر — <a href={routes.map()}>خريطة المسار</a> تعرضه بالترتيب
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <div class="grid grid-2">
+      {
+        shelves.map((sh) => (
+          <a
+            class="stage-card"
+            style={`background:var(--${sh.tone}-bg);align-items:flex-start`}
+            href={sh.href}
+          >
+            <span>
+              <span style="display:block;margin-bottom:6px">
+                <Kind kind={sh.kind} />
+              </span>
+              <span class="t" style={`color:var(--${sh.tone}-ink)`}>{sh.title}</span>
+              <span class="d" style="display:block;margin-top:4px">{sh.note}</span>
+              <span class="meta">{sh.count}</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="box-warn" style="margin-top:var(--sp-7)">
+      <p class="box-h">لا تقرأ المكتبة كلها</p>
+      <p style="margin-bottom:0">
+        أكثر ما يعطّل المتعلم في كورس بهذا الحجم أن يحاول إنهاء كل صفحة فيه. المكتبة مرجع
+        لا مسار: البرومبت الذي تفتحه بلا مهمة أمامك لا تتذكره، والقالب الذي تقرؤه ولا تملؤه
+        لا يعطيك شيئا. امشِ في المسار، وعد إلى هنا حين تحتاج
+      </p>
+    </div>
+
+    <div class="box-result" style="margin-top:var(--sp-5)">
+      <p class="box-h">خطوتك التالية</p>
+      <p>إن لم تكن بدأت المسار بعد، فابدأ منه لا من هنا</p>
+      <p style="margin-bottom:0">
+        <a class="btn" href={routes.map()}>افتح خريطة المسار</a>
+      </p>
+    </div>
+  </div>
+</Base>
