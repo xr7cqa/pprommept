@@ -1,0 +1,119 @@
+---
+import Base from '../layouts/Base.astro';
+import { routes } from '../lib/url';
+---
+
+<Base
+  title="الإعدادات"
+  description="حالة الحفظ المحلي، وإعادة ضبط تقدمك"
+  indexable={false}
+>
+  <section class="page-hero" style="background:var(--s2-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s2-ink)">الإعدادات</p>
+      <h1>تقدمك وبياناتك</h1>
+      <p class="lead">
+        كل ما يحفظه الموقع يبقى داخل متصفحك أنت. لا حساب، ولا خادم، ولا إرسال إلى أي مكان
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <article class="lesson-body">
+      <h2 style="margin-top:0">حالة الحفظ</h2>
+      <div class="box-note" id="storage-state">
+        <p class="box-h">جارٍ الفحص</p>
+        <p style="margin-bottom:0">لحظة واحدة</p>
+      </div>
+
+      <h2>ما الذي يُحفظ</h2>
+      <ul>
+        <li>الدروس التي أنجزتها، وتستطيع التراجع عن أي منها من داخل الدرس</li>
+        <li>آخر درس فتحته، وموضع القراءة التقريبي داخله</li>
+        <li>الدروس المحفوظة والبرومبتات المفضلة</li>
+        <li>علامات قوائم الفحص داخل الدروس والقوالب</li>
+        <li>القوالب التي بدأتها</li>
+      </ul>
+
+      <div class="box-warn">
+        <p class="box-h">انتبه لهذه الحالات</p>
+        <p style="margin-bottom:0">
+          مسح بيانات المتصفح، أو التصفح في وضع خاص، أو فتح الموقع من جهاز آخر — كلها تعني
+          أن تقدمك لن يظهر. وهذا ثمن ألا نطلب منك حسابا ولا بريدا
+        </p>
+      </div>
+
+      <h2 id="reset">إعادة ضبط التقدم</h2>
+      <p>
+        يمسح كل ما سبق مسحا نهائيا. لا يوجد تراجع بعد التأكيد، ولا نسخة احتياطية عندنا لأننا
+        لا نحتفظ ببياناتك أصلا
+      </p>
+
+      <div data-needs-storage>
+        <button class="btn btn--quiet" type="button" id="reset-btn">أعد ضبط تقدمي</button>
+        <div id="reset-confirm" hidden class="notice" style="margin-top:var(--sp-4);max-width:34rem">
+          <p style="margin-bottom:var(--sp-3)">
+            سيُمسح <span class="num" id="reset-count">0</span> عنصرا محفوظا. هل تريد المتابعة؟
+          </p>
+          <div class="btn-row">
+            <button class="btn btn--sm" type="button" id="reset-yes">نعم، امسح كل شيء</button>
+            <button class="btn btn--sm btn--quiet" type="button" id="reset-no">تراجع</button>
+          </div>
+        </div>
+        <p id="reset-done" hidden class="small" style="margin-top:var(--sp-3);color:var(--ok)">
+          تم مسح التقدم
+        </p>
+      </div>
+
+      <p style="margin-top:var(--sp-7)">
+        <a class="btn btn--quiet" href={routes.dashboard()}>عد إلى لوحتك</a>
+      </p>
+    </article>
+  </div>
+</Base>
+
+<script>
+  import { read, reset, storageAvailable, STORE_VERSION } from '../lib/progress';
+
+  const box = document.getElementById('storage-state');
+  const s = read();
+  const items =
+    Object.keys(s.done).length +
+    Object.keys(s.saved).length +
+    Object.keys(s.favPrompts).length +
+    Object.keys(s.checks).length +
+    Object.keys(s.apps).length;
+
+  if (box) {
+    if (storageAvailable()) {
+      box.innerHTML =
+        '<p class="box-h">الحفظ يعمل</p>' +
+        `<p style="margin-bottom:0">محفوظ عندك الآن <span class="num">${items}</span> عنصرا، ` +
+        `بإصدار بيانات <span class="num">${STORE_VERSION}</span>. ` +
+        'عند تحديث الموقع تُرقّى بياناتك تلقائيا ولا تُفقد</p>';
+    } else {
+      box.innerHTML =
+        '<p class="box-h">الحفظ معطل في هذا المتصفح</p>' +
+        '<p style="margin-bottom:0">الدروس والتنقل والبحث تعمل كالمعتاد، لكن تقدمك لن يبقى ' +
+        'بعد إغلاق الصفحة. غالبا السبب وضع تصفح خاص أو إعداد يمنع التخزين المحلي</p>';
+    }
+  }
+
+  const count = document.getElementById('reset-count');
+  if (count) count.textContent = String(items);
+
+  const confirmBox = document.getElementById('reset-confirm');
+  document.getElementById('reset-btn')?.addEventListener('click', () => {
+    if (confirmBox) confirmBox.hidden = false;
+  });
+  document.getElementById('reset-no')?.addEventListener('click', () => {
+    if (confirmBox) confirmBox.hidden = true;
+  });
+  document.getElementById('reset-yes')?.addEventListener('click', () => {
+    reset();
+    if (confirmBox) confirmBox.hidden = true;
+    const done = document.getElementById('reset-done');
+    if (done) done.hidden = false;
+    window.setTimeout(() => location.reload(), 700);
+  });
+</script>

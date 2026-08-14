@@ -86,4 +86,22 @@ const apps = defineCollection({
   }),
 });
 
-export const collections = { course, platforms, prompts, apps };
+/** قاموس المصطلحات — يُشرح المصطلح داخل الدرس، وهذه الصفحة للمراجعة والبحث */
+const glossary = defineCollection({
+  loader: glob({ base: './src/content/glossary', pattern: '**/*.md' }),
+  schema: z.object({
+    /** الاسم العربي الواضح */
+    ar: z.string(),
+    /** المصطلح الإنجليزي كما هو شائع */
+    en: z.string(),
+    /** تعريف في جملة واحدة، وهو ما يظهر في اللوحة السريعة */
+    short: z.string(),
+    order: z.number().int(),
+    /** مصطلحات مرتبطة */
+    seeAlso: z.array(z.string()).default([]),
+    /** الدرس الذي يشرح المفهوم كاملا */
+    concept: z.string().optional(),
+  }),
+});
+
+export const collections = { course, platforms, prompts, apps, glossary };

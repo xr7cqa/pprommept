@@ -1,0 +1,28 @@
+---
+import Icon from './Icon.astro';
+import { routes } from '../lib/url';
+
+/** لوحة شرح المصطلح — واحدة لكل صفحة، تُملأ من بيانات الرابط المضغوط */
+---
+
+<dialog class="sheet" id="term-sheet" aria-labelledby="term-sheet-title">
+  <div class="sheet-panel">
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <p class="eyebrow" style="margin:0">مصطلح</p>
+      <button class="drawer-close" type="button" data-close-sheet aria-label="أغلق شرح المصطلح">
+        <Icon name="close" size={22} />
+      </button>
+    </div>
+    <h2 id="term-sheet-title" class="sheet-title">
+      <span data-term-ar></span>
+      <bdi class="lat" data-term-en></bdi>
+    </h2>
+    <p class="sheet-body" data-term-short></p>
+    <p style="margin:0">
+      <a class="btn btn--quiet btn--sm" href={routes.glossary()} data-term-more>
+        اقرأ الشرح الكامل في القاموس
+      </a>
+    </p>
+  </div>
+</dialog>

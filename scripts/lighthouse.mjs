@@ -15,6 +15,8 @@ const PAGES = [
   { path: 'course/01-empty-order/', name: 'lesson' },
   { path: 'dashboard/', name: 'dashboard' },
   { path: 'prompts/', name: 'prompts' },
+  { path: 'glossary/', name: 'glossary' },
+  { path: 'search/', name: 'search' },
 ];
 
 const MIN = { performance: 90, accessibility: 95, 'best-practices': 95 };

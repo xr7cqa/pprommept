@@ -2,6 +2,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* السمة hidden تسبق أي عرض معلن في المكونات، وإلا ظهر عنصر يفترض أنه مخفي */
+[hidden] { display: none !important; }
+
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;

@@ -45,6 +45,14 @@ async function newPage(browser, { width = 390, height = 844, js = true } = {}) {
   return page;
 }
 
+/** يفتح صفحة بتخزين محلي نظيف — الاختبارات تتشارك المتصفح فتتسرب الحالة بينها */
+async function freshPage(browser, opts = {}) {
+  const page = await newPage(browser, opts);
+  await page.goto(SITE, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => localStorage.clear());
+  return page;
+}
+
 async function main() {
   const browser = await puppeteer.launch({
     executablePath: CHROME,
@@ -330,6 +338,20 @@ async function main() {
     await page.close();
   });
 
+  await check('38 · كل عنصر يحمل سمة الإخفاء مخفي بصريا فعلا', async () => {
+    const page = await freshPage(browser);
+    for (const p of ['', 'map/', 'prompts/', 'toolkit/', 'dashboard/', 'course/01-empty-order/']) {
+      await page.goto(SITE + p, { waitUntil: 'networkidle0' });
+      const leaks = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('[hidden]'))
+          .filter((el) => getComputedStyle(el).display !== 'none')
+          .map((el) => el.outerHTML.slice(0, 70)),
+      );
+      assert(leaks.length === 0, `عناصر مخفية ظاهرة في /${p}: ${leaks.join(' | ')}`);
+    }
+    await page.close();
+  });
+
   await check('26 · الأرقام في الواجهة لاتينية', async () => {
     const page = await newPage(browser);
     for (const p of ['', 'map/', 'dashboard/', 'prompts/']) {
@@ -391,6 +413,235 @@ async function main() {
     });
     assert(active.cls.includes('skip'), `أول عنصر بالتركيز: ${active.cls}`);
     assert(active.top >= 0, 'رابط التخطي لا يظهر عند التركيز');
+    await page.close();
+  });
+
+
+  // ── قائمة محتويات الدرس وتمييز القسم الحالي ──
+  await check('27 · قائمة المحتويات تعمل وتميّز القسم الحالي أثناء النزول', async () => {
+    const page = await newPage(browser, { width: 390, height: 844 });
+    await page.goto(SITE + 'course/28-the-hook/', { waitUntil: 'networkidle0' });
+    const links = await page.$$eval('.toc-list a', (as) => as.map((a) => a.getAttribute('href')));
+    assert(links.length > 1, 'قائمة المحتويات فارغة');
+
+    // مطوية على الهاتف، وتُفتح بالزر، ويغلقها اختيار قسم
+    const collapsed = await page.$eval('.toc-list', (el) => getComputedStyle(el).display);
+    assert(collapsed === 'none', `القائمة غير مطوية على الهاتف: ${collapsed}`);
+    await page.click('.toc-toggle');
+    await page.waitForFunction(
+      () => getComputedStyle(document.querySelector('.toc-list')).display !== 'none',
+      { timeout: 2000 },
+    );
+    await page.click('.toc-list a');
+    await new Promise((r) => setTimeout(r, 300));
+    const reclosed = await page.$eval('.toc-list', (el) => getComputedStyle(el).display);
+    assert(reclosed === 'none', 'القائمة لم تُغلق بعد اختيار قسم');
+    assert(links.every((h) => h && h.startsWith('#')), 'روابط المحتويات ليست مراسي');
+
+    // كل مرساة موجودة فعلا في الصفحة
+    const missing = await page.evaluate(
+      (hs) => hs.filter((h) => !document.getElementById(decodeURIComponent(h.slice(1)))),
+      links,
+    );
+    assert(missing.length === 0, `مراسٍ مفقودة: ${missing.join(', ')}`);
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.55));
+    await new Promise((r) => setTimeout(r, 400));
+    const current = await page.$$eval('.toc-list a[aria-current="true"]', (a) => a.length);
+    assert(current === 1, `عدد الأقسام المميّزة ${current}`);
+    await page.close();
+  });
+
+  // ── شريط تقدم القراءة ──
+  await check('28 · شريط تقدم القراءة يتحرك مع النزول ولا يغطي المحتوى', async () => {
+    const page = await newPage(browser, { width: 390, height: 844 });
+    await page.goto(SITE + 'course/28-the-hook/', { waitUntil: 'networkidle0' });
+    const before = await page.$eval('[data-read-bar]', (el) => el.style.inlineSize);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.8));
+    await new Promise((r) => setTimeout(r, 400));
+    const after = await page.$eval('[data-read-bar]', (el) => parseInt(el.style.inlineSize) || 0);
+    assert(after > 10, `الشريط لم يتحرك: ${before} ← ${after}`);
+    const h = await page.$eval('.read-bar', (el) => el.getBoundingClientRect().height);
+    assert(h <= 4, `الشريط سميك ${h}px`);
+    await page.close();
+  });
+
+  // ── حفظ موضع القراءة ──
+  await check('29 · موضع القراءة يُحفظ وتظهر شريحة الاستئناف عند العودة', async () => {
+    const page = await freshPage(browser, { width: 390, height: 844 });
+    await page.goto(SITE + 'course/28-the-hook/', { waitUntil: 'networkidle0' });
+    await page.evaluate(() => window.scrollTo(0, 1800));
+    await new Promise((r) => setTimeout(r, 2200));
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('pa.course')).pos);
+    assert(Object.keys(saved).length === 1, 'لم يُحفظ موضع القراءة');
+
+    await page.goto(SITE + 'course/28-the-hook/', { waitUntil: 'networkidle0' });
+    await page.waitForSelector('.resume-chip', { timeout: 3000 });
+    await page.click('[data-resume-go]');
+    await new Promise((r) => setTimeout(r, 700));
+    const y = await page.evaluate(() => window.scrollY);
+    assert(y > 1000, `لم ينتقل إلى الموضع المحفوظ: ${y}`);
+    await page.close();
+  });
+
+  // ── التراجع عن إكمال الدرس ──
+  await check('30 · إلغاء إكمال الدرس يعمل ويعيد التقدم', async () => {
+    const page = await freshPage(browser);
+    await page.goto(firstLessonUrl, { waitUntil: 'networkidle0' });
+    await page.click('.lesson-body [data-complete]');
+    await page.waitForFunction(
+      () => Object.keys(JSON.parse(localStorage.getItem('pa.course')).done).length === 1,
+      { timeout: 3000 },
+    );
+    await page.click('.lesson-body [data-complete]');
+    await page.waitForFunction(
+      () => Object.keys(JSON.parse(localStorage.getItem('pa.course')).done).length === 0,
+      { timeout: 3000 },
+    );
+    const pressed = await page.$eval('.lesson-body [data-complete]', (b) => b.getAttribute('aria-pressed'));
+    assert(pressed === 'false', 'حالة الزر لم تتحدث بعد التراجع');
+    await page.close();
+  });
+
+  // ── المصطلحات ──
+  await check('31 · المصطلح يفتح لوحة شرح بلا مغادرة الدرس، ويعمل كرابط بلا جافاسكربت', async () => {
+    const page = await newPage(browser, { width: 390, height: 844 });
+    await page.goto(SITE + 'course/28-the-hook/', { waitUntil: 'networkidle0' });
+    const term = await page.$('a[data-term]');
+    assert(term, 'لا يوجد مصطلح قابل للضغط في هذا الدرس');
+    await term.click();
+    await page.waitForFunction(() => document.getElementById('term-sheet').open, { timeout: 2000 });
+    const txt = await page.$eval('#term-sheet [data-term-short]', (el) => el.textContent.trim());
+    assert(txt.length > 10, 'شرح المصطلح فارغ');
+    const url1 = page.url();
+    assert(url1.includes('/course/'), 'اللوحة غادرت الدرس');
+    await page.click('[data-close-sheet]');
+    await page.waitForFunction(() => !document.getElementById('term-sheet').open, { timeout: 2000 });
+
+    // بلا جافاسكربت: الرابط ينقل إلى القاموس
+    const noJs = await newPage(browser, { js: false });
+    await noJs.goto(SITE + 'course/28-the-hook/', { waitUntil: 'domcontentloaded' });
+    const href = await noJs.$eval('a[data-term]', (a) => a.getAttribute('href'));
+    assert(href && href.includes('glossary'), `رابط المصطلح غير صالح: ${href}`);
+    await noJs.close();
+    await page.close();
+  });
+
+  // ── صفحة القاموس ──
+  await check('32 · صفحة القاموس تعرض المصطلحات وتبحث فيها', async () => {
+    const page = await newPage(browser);
+    await page.goto(SITE + 'glossary/', { waitUntil: 'networkidle0' });
+    const n = await page.$$eval('#terms > article', (a) => a.length);
+    assert(n >= 10, `عدد المصطلحات ${n}`);
+    await page.type('#tq', 'هوك');
+    await new Promise((r) => setTimeout(r, 200));
+    const shown = await page.$$eval('#terms > article', (as) => as.filter((a) => !a.hidden).length);
+    assert(shown >= 1 && shown < n, `تصفية القاموس لم تعمل: ${shown} من ${n}`);
+    await page.close();
+  });
+
+  // ── البحث ينقل إلى الموضع الصحيح ──
+  await check('33 · نتيجة البحث تنقل إلى القسم الصحيح داخل الدرس', async () => {
+    const page = await newPage(browser);
+    await page.goto(SITE + 'search/?q=' + encodeURIComponent('أول ثلاث كلمات'), { waitUntil: 'networkidle0' });
+    await page.waitForFunction(() => document.querySelectorAll('#results > a').length > 0, { timeout: 5000 });
+    const hrefs = await page.$$eval('#results > a', (as) => as.map((a) => a.getAttribute('href')));
+    const deep = hrefs.find((h) => h.includes('#'));
+    assert(deep, `لا توجد نتيجة تشير إلى قسم: ${hrefs.slice(0, 3).join(' | ')}`);
+    await page.goto(new URL(deep, SITE).href, { waitUntil: 'networkidle0' });
+    await new Promise((r) => setTimeout(r, 400));
+    const y = await page.evaluate(() => window.scrollY);
+    assert(y > 200, `الصفحة لم تنتقل إلى القسم: ${y}`);
+    await page.close();
+  });
+
+  // ── الصفحة الرئيسية كلوحة دخول ──
+  await check('34 · الصفحة الرئيسية تعرض التقدم وتحوّل الزر إلى أكمل من حيث توقفت', async () => {
+    const page = await freshPage(browser);
+    await page.goto(SITE, { waitUntil: 'networkidle0' });
+    const hiddenAtStart = await page.$eval('#entry-card', (el) => ({
+      attr: el.hidden,
+      display: getComputedStyle(el).display,
+    }));
+    assert(hiddenAtStart.attr, 'سمة الإخفاء غير مضبوطة على بطاقة المتابعة');
+    assert(hiddenAtStart.display === 'none', `بطاقة المتابعة ظاهرة بصريا قبل البدء: ${hiddenAtStart.display}`);
+    const startLabel = await page.$eval('#start-btn', (a) => a.textContent.trim());
+    assert(startLabel === 'ابدأ الكورس', `نص زر البداية: ${startLabel}`);
+
+    await page.goto(firstLessonUrl, { waitUntil: 'networkidle0' });
+    await page.click('.lesson-body [data-complete]');
+    await new Promise((r) => setTimeout(r, 300));
+    await page.goto(SITE, { waitUntil: 'networkidle0' });
+    await page.waitForFunction(() => !document.getElementById('entry-card').hidden, { timeout: 3000 });
+    const label = await page.$eval('#start-btn', (a) => a.textContent.trim());
+    assert(label === 'أكمل من حيث توقفت', `نص الزر بعد البدء: ${label}`);
+    const meta = await page.$eval('#entry-meta', (el) => el.textContent);
+    assert(/1/.test(meta), `نص التقدم: ${meta}`);
+    const bars = await page.$$eval('[data-stage-bar]', (is) => is.map((i) => i.style.width));
+    assert(bars.some((w) => parseInt(w) > 0), 'أشرطة المسارات لم تتحدث');
+    await page.close();
+  });
+
+  // ── إعادة الضبط في الإعدادات وحدها ──
+  await check('35 · إعادة الضبط في صفحة الإعدادات بتأكيد، ولا توجد في اللوحة', async () => {
+    const page = await freshPage(browser);
+    await page.goto(firstLessonUrl, { waitUntil: 'networkidle0' });
+    await page.click('.lesson-body [data-complete]');
+    await new Promise((r) => setTimeout(r, 300));
+
+    await page.goto(SITE + 'dashboard/', { waitUntil: 'networkidle0' });
+    const inDash = await page.$('#reset-yes');
+    assert(!inDash, 'زر المسح ما زال في لوحة المتعلم');
+
+    await page.goto(SITE + 'settings/', { waitUntil: 'networkidle0' });
+    const confirmHidden = await page.$eval('#reset-confirm', (el) => el.hidden);
+    assert(confirmHidden, 'التأكيد ظاهر قبل الضغط');
+    await page.click('#reset-btn');
+    await page.waitForFunction(() => !document.getElementById('reset-confirm').hidden, { timeout: 2000 });
+    await page.click('#reset-yes');
+    await new Promise((r) => setTimeout(r, 1200));
+    const left = await page.evaluate(() => localStorage.getItem('pa.course'));
+    assert(!left, `بقيت بيانات بعد المسح: ${left}`);
+    await page.close();
+  });
+
+  // ── ترقية بيانات من إصدار أقدم ──
+  await check('36 · بيانات الإصدار الأقدم تُرقّى بلا فقدان', async () => {
+    const page = await freshPage(browser);
+    await page.evaluate(() =>
+      localStorage.setItem(
+        'pa.course',
+        JSON.stringify({
+          v: 1,
+          done: { 'x-old-lesson': 111 },
+          saved: {},
+          favPrompts: {},
+          checks: { 'k:0': true },
+          apps: {},
+          last: { id: 'x-old-lesson', title: 'درس قديم', href: '/pprommept-/course/01-empty-order/', stage: 1, ts: 1 },
+        }),
+      ),
+    );
+    await page.goto(SITE + 'settings/', { waitUntil: 'networkidle0' });
+    const after = await page.evaluate(() => {
+      const raw = JSON.parse(localStorage.getItem('pa.course') ?? 'null');
+      return raw;
+    });
+    const state = await page.$eval('#storage-state', (el) => el.textContent);
+    assert(state.includes('الحفظ يعمل'), 'حالة الحفظ غير صحيحة');
+    assert(state.includes('2'), `لم يظهر إصدار البيانات: ${state}`);
+    void after;
+    await page.close();
+  });
+
+  // ── مسار التنقل ──
+  await check('37 · مسار التنقل يظهر ويعمل', async () => {
+    const page = await newPage(browser);
+    await page.goto(firstLessonUrl, { waitUntil: 'networkidle0' });
+    const items = await page.$$eval('.crumbs li', (ls) => ls.map((l) => l.textContent.trim()));
+    assert(items.length === 4, `عناصر المسار ${items.length}`);
+    const href = await page.$eval('.crumbs a[href*="map"]', (a) => a.getAttribute('href'));
+    assert(href.includes('/map/'), `رابط الخريطة: ${href}`);
     await page.close();
   });
 

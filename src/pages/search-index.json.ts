@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import { normalizeAr, stripMdx } from '../lib/normalize';
 import { routes } from '../lib/url';
 import { stageByN } from '../lib/stages';
@@ -8,26 +8,61 @@ import { stageByN } from '../lib/stages';
  * فهرس بحث محلي خفيف يُبنى وقت البناء ويُحمَّل فقط عند فتح صفحة البحث.
  * فُضّل على مكتبة جاهزة لأننا نحتاج تطبيعا عربيا نتحكم فيه: الهمزات، والألف المقصورة،
  * والتاء المربوطة، والتشكيل — ولأن الفهرس هنا صغير ولا يحتاج WebAssembly.
+ *
+ * كل مستند يحمل رابطا يصل إلى موضعه الدقيق: عنوان القسم داخل الدرس لا رأس الصفحة.
  */
+
+interface Doc {
+  t: string; // العنوان
+  x: string; // مقتطف
+  h: string; // الرابط، وقد يحمل مرساة قسم
+  k: string; // نوع المستند
+  n: string; // النص المطبّع للمطابقة
+}
+
 export const GET: APIRoute = async () => {
-  const docs: Array<{
-    t: string; // العنوان
-    x: string; // مقتطف
-    h: string; // الرابط
-    k: string; // نوع المستند
-    n: string; // النص المطبّع للمطابقة
-  }> = [];
+  const docs: Doc[] = [];
 
   for (const l of await getCollection('course')) {
+    const stage = stageByN(l.data.stage);
     const body = stripMdx(l.body ?? '');
     docs.push({
       t: l.data.title,
       x: l.data.summary,
       h: routes.lesson(l.id),
-      k: `درس · المرحلة ${l.data.stage} — ${stageByN(l.data.stage).title}`,
+      k: `درس · المرحلة ${l.data.stage} — ${stage.title}`,
+      // متن الدرس يُفهرس عبر أقسامه أدناه، فلا نكرره هنا ويبقى الفهرس خفيفا على الهاتف
       n: normalizeAr(
-        [l.data.title, l.data.summary, l.data.outcome, l.data.keywords.join(' '), body].join(' '),
+        [l.data.title, l.data.summary, l.data.outcome, l.data.keywords.join(' ')].join(' '),
       ),
+    });
+
+    /* أقسام الدرس تُفهرس مستقلة حتى ينتقل الباحث إلى الموضع الصحيح */
+    const { headings } = await render(l);
+    const sections = headings.filter((h) => h.depth === 2);
+    for (let i = 0; i < sections.length; i += 1) {
+      const h = sections[i]!;
+      const start = body.indexOf(h.text);
+      const nextStart = sections[i + 1] ? body.indexOf(sections[i + 1]!.text) : body.length;
+      const end = nextStart > start ? Math.min(nextStart, start + 1200) : start + 900;
+      const chunk = start >= 0 ? body.slice(start, end) : '';
+      docs.push({
+        t: h.text,
+        x: chunk.slice(h.text.length, h.text.length + 150).trim(),
+        h: `${routes.lesson(l.id)}#${h.slug}`,
+        k: `قسم داخل: ${l.data.title}`,
+        n: normalizeAr(`${h.text} ${chunk}`),
+      });
+    }
+  }
+
+  for (const g of await getCollection('glossary')) {
+    docs.push({
+      t: `${g.data.ar} (${g.data.en})`,
+      x: g.data.short,
+      h: `${routes.glossary()}#t-${g.id}`,
+      k: 'مصطلح',
+      n: normalizeAr([g.data.ar, g.data.en, g.data.short, g.body ?? ''].join(' ')),
     });
   }
 
@@ -67,7 +102,7 @@ export const GET: APIRoute = async () => {
     });
   }
 
-  return new Response(JSON.stringify({ v: 1, docs }), {
+  return new Response(JSON.stringify({ v: 2, docs }), {
     headers: { 'content-type': 'application/json; charset=utf-8' },
   });
 };

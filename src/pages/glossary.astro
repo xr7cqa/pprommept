@@ -1,0 +1,94 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { routes } from '../lib/url';
+
+const terms = (await getCollection('glossary')).sort((a, b) => a.data.order - b.data.order);
+const lessons = await getCollection('course');
+const rendered = await Promise.all(
+  terms.map(async (t) => ({ t, Body: (await render(t)).Content })),
+);
+---
+
+<Base
+  title="قاموس المصطلحات"
+  description="كل مصطلح أجنبي يظهر في الكورس، بترجمته العربية وشرحه بلغة مبتدئ"
+>
+  <section class="page-hero" style="background:var(--s4-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s4-ink)">مرجع سريع</p>
+      <h1>قاموس المصطلحات</h1>
+      <p class="lead">
+        كل مصطلح هنا مشروح داخل درسه أيضا. هذه الصفحة للمراجعة والبحث السريع، لا بديل عن
+        الشرح في سياقه
+      </p>
+      <form class="search-form" role="search" style="margin-top:var(--sp-5);max-width:28rem" onsubmit="return false">
+        <label class="sr-only" for="tq">ابحث في المصطلحات</label>
+        <input class="search-input" id="tq" type="search" placeholder="اكتب المصطلح بالعربية أو بالإنجليزية" autocomplete="off" />
+      </form>
+      <p class="small muted" id="tcount" aria-live="polite" style="margin-top:var(--sp-3)"></p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <div class="grid grid-2" id="terms">
+      {
+        rendered.map(({ t, Body }) => {
+          const d = t.data;
+          const lesson = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
+          return (
+            <article
+              class="term-card"
+              id={`t-${t.id}`}
+              data-term-text={`${d.ar} ${d.en} ${d.short}`}
+            >
+              <h2>
+                {d.ar} <bdi class="lat">({d.en})</bdi>
+              </h2>
+              <p class="short">{d.short}</p>
+              <Body />
+              <div class="links">
+                {lesson && (
+                  <a class="btn btn--sm btn--quiet" href={routes.lesson(lesson.id)}>
+                    الدرس الذي يشرحه
+                  </a>
+                )}
+                {d.seeAlso.map((s) => {
+                  const other = terms.find((x) => x.id === s);
+                  return other ? (
+                    <a class="chip" href={`#t-${other.id}`}>{other.data.ar}</a>
+                  ) : null;
+                })}
+              </div>
+            </article>
+          );
+        })
+      }
+    </div>
+    <p class="empty" id="tempty" hidden>لا مصطلح يطابق بحثك</p>
+  </div>
+</Base>
+
+<script>
+  import { normalizeAr } from '../lib/normalize';
+
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('#terms > article'));
+  const input = document.getElementById('tq') as HTMLInputElement | null;
+  const count = document.getElementById('tcount');
+  const empty = document.getElementById('tempty');
+
+  function apply() {
+    const q = normalizeAr(input?.value ?? '');
+    let n = 0;
+    for (const c of cards) {
+      const show = !q || normalizeAr(c.dataset.termText ?? '').includes(q);
+      c.hidden = !show;
+      if (show) n += 1;
+    }
+    if (count) count.textContent = `${n} مصطلحا معروضا من ${cards.length}`;
+    if (empty) empty.hidden = n !== 0;
+  }
+
+  input?.addEventListener('input', apply);
+  apply();
+</script>

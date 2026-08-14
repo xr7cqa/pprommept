@@ -126,23 +126,12 @@ const first = lessons[0];
       <div id="saved" style="margin-top:var(--sp-4)"></div>
     </section>
 
-    <section style="margin-top:var(--sp-8);padding-bottom:var(--sp-6)" data-needs-storage hidden>
-      <h2>إعادة الضبط</h2>
+    <section style="margin-top:var(--sp-8);padding-bottom:var(--sp-6)">
+      <h2>الإعدادات</h2>
       <p class="muted" style="max-width:34rem">
-        يمسح كل ما حفظه المتصفح: الدروس المنجزة، والمحفوظات، والبرومبتات المفضلة، وعلامات قوائم الفحص.
-        لا يمكن التراجع بعد التأكيد
+        حالة الحفظ المحلي، وما الذي يُحفظ، وإعادة ضبط التقدم — كلها في صفحة واحدة
       </p>
-      <button class="btn btn--quiet" type="button" id="reset-btn">أعد ضبط تقدمي</button>
-      <div id="reset-confirm" hidden class="notice" style="margin-top:var(--sp-4);max-width:34rem">
-        <p style="margin-bottom:var(--sp-3)">هل تريد فعلا مسح كل تقدمك؟ هذا الإجراء نهائي</p>
-        <div class="btn-row">
-          <button class="btn btn--sm" type="button" id="reset-yes">نعم، امسح كل شيء</button>
-          <button class="btn btn--sm btn--quiet" type="button" id="reset-no">تراجع</button>
-        </div>
-      </div>
-      <p id="reset-done" hidden class="small" style="margin-top:var(--sp-3);color:var(--ok)">
-        تم مسح التقدم
-      </p>
+      <p><a class="btn btn--quiet" href={routes.settings()}>افتح الإعدادات</a></p>
     </section>
   </div>
 </Base>
@@ -152,7 +141,7 @@ const first = lessons[0];
 </script>
 
 <script>
-  import { read, ratio, reset, storageAvailable } from '../lib/progress';
+  import { read, ratio, storageAvailable } from '../lib/progress';
 
   interface Row { id: string; t: string; s: number; c: boolean; h: string }
   interface StageRow { n: number; t: string; tone: string; slug: string }
@@ -247,16 +236,4 @@ const first = lessons[0];
       : `<p class="empty">لا توجد دروس محفوظة. زر «احفظ الدرس» داخل أي درس يضعه هنا</p>`;
   }
 
-  /* ── إعادة الضبط بتأكيد واضح ── */
-  const rb = document.getElementById('reset-btn');
-  const rc = document.getElementById('reset-confirm');
-  rb?.addEventListener('click', () => { if (rc) rc.hidden = false; });
-  document.getElementById('reset-no')?.addEventListener('click', () => { if (rc) rc.hidden = true; });
-  document.getElementById('reset-yes')?.addEventListener('click', () => {
-    reset();
-    if (rc) rc.hidden = true;
-    const done = document.getElementById('reset-done');
-    if (done) done.hidden = false;
-    window.setTimeout(() => location.reload(), 700);
-  });
 </script>

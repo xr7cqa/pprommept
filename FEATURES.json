@@ -1,0 +1,179 @@
+{
+  "updated": "2026-08-14",
+  "content": {
+    "stages": 7,
+    "lessons": 44,
+    "coreLessons": 38,
+    "platforms": 9,
+    "prompts": 34,
+    "templates": 12,
+    "glossaryTerms": 15
+  },
+  "features": [
+    {
+      "id": "path",
+      "name": "مسار أساسي من سبع مراحل، موصى به وغير مقفل",
+      "status": "done"
+    },
+    {
+      "id": "libraries",
+      "name": "مكتبات مرجعية تُفتح بحرية ولا تدخل في التقدم",
+      "status": "done"
+    },
+    {
+      "id": "home-entry",
+      "name": "الصفحة الرئيسية لوحة دخول بنسبة تقدم وآخر درس",
+      "status": "done"
+    },
+    {
+      "id": "resume",
+      "name": "زر يتحول بين ابدأ الكورس وأكمل من حيث توقفت",
+      "status": "done"
+    },
+    {
+      "id": "dashboard",
+      "name": "لوحة المتعلم: تقدم ومراحل وخطوة مقترحة ومخرجات ومحفوظات",
+      "status": "done"
+    },
+    {
+      "id": "map",
+      "name": "خريطة المسار بمخرج كل درس ووقته وحالته",
+      "status": "done"
+    },
+    {
+      "id": "lesson-crumbs",
+      "name": "مسار تنقل مختصر في صفحة الدرس",
+      "status": "done"
+    },
+    {
+      "id": "lesson-toc",
+      "name": "قائمة محتويات الدرس مع تمييز القسم الحالي",
+      "status": "done"
+    },
+    {
+      "id": "read-progress",
+      "name": "شريط تقدم القراءة",
+      "status": "done"
+    },
+    {
+      "id": "read-position",
+      "name": "حفظ موضع القراءة واستئنافه باختيار المتعلم",
+      "status": "done"
+    },
+    {
+      "id": "complete-toggle",
+      "name": "إكمال الدرس والتراجع عنه",
+      "status": "done"
+    },
+    {
+      "id": "save-lesson",
+      "name": "حفظ الدرس وإلغاء حفظه",
+      "status": "done"
+    },
+    {
+      "id": "checklists",
+      "name": "قوائم فحص تحفظ حالتها محليا",
+      "status": "done"
+    },
+    {
+      "id": "glossary-inline",
+      "name": "مصطلح قابل للضغط يفتح شرحا بلا مغادرة الدرس",
+      "status": "done"
+    },
+    {
+      "id": "glossary-page",
+      "name": "صفحة قاموس مستقلة قابلة للبحث",
+      "status": "done"
+    },
+    {
+      "id": "search",
+      "name": "بحث عربي محلي يشمل الأقسام والمصطلحات وينقل إلى الموضع",
+      "status": "done"
+    },
+    {
+      "id": "prompts",
+      "name": "مكتبة برومبتات بمتغيرات ومثال إدخال ونتيجة ومعيار حكم",
+      "status": "done"
+    },
+    {
+      "id": "copy",
+      "name": "نسخ البرومبت مع بديل يعمل عند منع الحافظة",
+      "status": "done"
+    },
+    {
+      "id": "favorites",
+      "name": "برومبتات مفضلة",
+      "status": "done"
+    },
+    {
+      "id": "templates",
+      "name": "قوالب تطبيقية مع تتبع ما بدأه المتعلم",
+      "status": "done"
+    },
+    {
+      "id": "settings",
+      "name": "صفحة إعدادات وإعادة ضبط بتأكيد",
+      "status": "done"
+    },
+    {
+      "id": "finish",
+      "name": "صفحة إتمام تعرض ما أنجزه وخطوة واحدة",
+      "status": "done"
+    },
+    {
+      "id": "404",
+      "name": "صفحة خطأ عربية بأزرار عودة وآخر درس",
+      "status": "done"
+    },
+    {
+      "id": "no-js",
+      "name": "المتن والتنقل يعملان مع تعطيل الجافاسكربت",
+      "status": "done"
+    },
+    {
+      "id": "storage-off",
+      "name": "تعطيل ميزات التقدم بلطف عند منع التخزين",
+      "status": "done"
+    },
+    {
+      "id": "rtl",
+      "name": "اتجاه عربي صحيح مع عزل الإنجليزية والأرقام",
+      "status": "done"
+    },
+    {
+      "id": "fonts-local",
+      "name": "خطوط محلية بلا طلب شبكة خارجي",
+      "status": "done"
+    },
+    {
+      "id": "telegram",
+      "name": "رابط القناة في ثلاثة مواضع مقصودة فقط",
+      "status": "done"
+    },
+    {
+      "id": "ci",
+      "name": "بناء ونشر عبر GitHub Actions يمنع النشر عند فشل فحص",
+      "status": "done"
+    },
+    {
+      "id": "service-worker",
+      "name": "عمل بلا اتصال",
+      "status": "deferred",
+      "why": "يحتاج تخزينا مؤقتا ذا إصدار واختبارات تمنع بقاء نسخة قديمة — انظر DECISIONS.md W-008"
+    }
+  ],
+  "checks": [
+    "typecheck",
+    "lint",
+    "contrast",
+    "build",
+    "forbidden-files",
+    "internal-links",
+    "external-links",
+    "assets",
+    "ui-tests",
+    "a11y",
+    "lighthouse",
+    "screenshots"
+  ]
+}
