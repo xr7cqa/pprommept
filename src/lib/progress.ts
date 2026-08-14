@@ -9,7 +9,7 @@
  */
 
 export const STORE_KEY = 'pa.course';
-export const STORE_VERSION = 1;
+export const STORE_VERSION = 2;
 
 export interface Snapshot {
   v: number;
@@ -23,12 +23,14 @@ export interface Snapshot {
   checks: Record<string, true>;
   /** التطبيقات التي بدأها */
   apps: Record<string, number>;
+  /** موضع القراءة التقريبي داخل كل درس، بالبكسل */
+  pos: Record<string, number>;
   /** آخر درس تمت زيارته فعلا */
   last: { id: string; title: string; href: string; stage: number; ts: number } | null;
 }
 
 function fresh(): Snapshot {
-  return { v: STORE_VERSION, done: {}, saved: {}, favPrompts: {}, checks: {}, apps: {}, last: null };
+  return { v: STORE_VERSION, done: {}, saved: {}, favPrompts: {}, checks: {}, apps: {}, pos: {}, last: null };
 }
 
 let available: boolean | null = null;
@@ -88,10 +90,14 @@ function sanitizeLast(x: unknown): Snapshot['last'] {
   };
 }
 
-/** ترقية البيانات من إصدار أقدم — نقطة التوسعة عند تغيير البنية مستقبلا */
+/**
+ * ترقية البيانات من إصدار أقدم.
+ * القاعدة: لا تُفقد بيانات المتعلم عند تحديث الموقع.
+ *  · الإصدار 1 → 2: أضيف حقل مواضع القراءة، وبقية الحقول تُنقل كما هي
+ *  · إصدار أحدث من المعروف: يُتجاهل لأننا لا نعرف بنيته، ونبدأ من قيم سليمة
+ */
 function upgrade(raw: Record<string, unknown>): Snapshot {
   const v = typeof raw['v'] === 'number' ? raw['v'] : 0;
-  // لا توجد إصدارات سابقة بعد؛ أي إصدار غير معروف يُقرأ بأفضل جهد ثم يُختم بالإصدار الحالي
   if (v > STORE_VERSION) return fresh();
   return {
     v: STORE_VERSION,
@@ -100,6 +106,7 @@ function upgrade(raw: Record<string, unknown>): Snapshot {
     favPrompts: sanitizeMap(raw['favPrompts']),
     checks: sanitizeChecks(raw['checks']),
     apps: sanitizeMap(raw['apps']),
+    pos: sanitizeMap(raw['pos']),
     last: sanitizeLast(raw['last']),
   };
 }

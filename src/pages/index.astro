@@ -15,6 +15,15 @@ const platforms = await getCollection('platforms');
 const prompts = await getCollection('prompts');
 const apps = await getCollection('apps');
 
+/** جدول خفيف يقرأه المتصفح لتحديث نسب المسارات وبطاقة المتابعة */
+const stageTable = STAGES.map((st) => ({
+  n: st.n,
+  core: lessons.filter((l) => l.data.stage === st.n && l.data.core).map((l) => l.id),
+  all: lessons.filter((l) => l.data.stage === st.n).map((l) => ({ id: l.id, h: routes.lesson(l.id) })),
+}));
+const coreIds = lessons.filter((l) => l.data.core).map((l) => l.id);
+const firstHref = first ? routes.lesson(first.id) : routes.map();
+
 const outputs = [
   ['مجال يمكن خدمته', 'لا «مجال واسع» ولا مجال ضيق إلى درجة تخنقك'],
   ['وثيقة جمهور', 'مشكلته ولغته واعتراضاته مكتوبة أمامك'],
@@ -43,12 +52,30 @@ const outputs = [
         وحساب مجهز من الاسم إلى المنشور المثبت، وأول خمس عشرة قطعة جاهزة للنشر
       </p>
       <div class="btn-row" style="margin-top:var(--sp-6);max-width:30rem">
-        {first && <a class="btn" href={routes.lesson(first.id)}>ابدأ الكورس</a>}
+        <a class="btn" href={firstHref} id="start-btn">ابدأ الكورس</a>
         <a class="btn btn--ghost" href={routes.map()}>شاهد خريطة الكورس</a>
       </div>
-      <p class="small muted" style="margin-top:var(--sp-4)" data-needs-storage hidden>
-        <a href={routes.dashboard()}>تابع من حيث توقفت</a>
-      </p>
+
+      <div class="entry-card" id="entry-card" hidden>
+        <div class="entry-ring" aria-hidden="true">
+          <svg viewBox="0 0 44 44" width="64" height="64">
+            <circle cx="22" cy="22" r="19" fill="none" stroke="var(--line)" stroke-width="5" />
+            <circle
+              id="ring-arc" cx="22" cy="22" r="19" fill="none"
+              stroke="var(--acc)" stroke-width="5" stroke-linecap="round"
+              stroke-dasharray="119.4" stroke-dashoffset="119.4"
+              transform="rotate(-90 22 22)"
+            />
+          </svg>
+          <span class="entry-ring-pct num" id="ring-pct">0%</span>
+        </div>
+        <div style="flex:1;min-inline-size:0">
+          <p class="eyebrow" style="margin-bottom:2px" id="entry-kicker">تابع من حيث توقفت</p>
+          <p class="entry-title" id="entry-title"></p>
+          <p class="small muted" style="margin:0" id="entry-meta"></p>
+        </div>
+        <a class="btn btn--sm" href={firstHref} id="entry-btn">أكمل</a>
+      </div>
     </div>
   </section>
 
@@ -67,12 +94,19 @@ const outputs = [
               class="stage-card"
               style={`background:var(--${st.tone}-bg)`}
               href={target ? routes.lesson(target.id) : routes.map()}
+              data-stage={String(st.n)}
             >
               <span class="n" style={`color:var(--${st.tone}-ink)`}>{st.n}</span>
-              <span>
+              <span style="flex:1;min-inline-size:0">
                 <span class="t">{st.title}</span>
                 <span class="d" style="display:block">{st.promise}</span>
-                <span class="meta">{n} دروس</span>
+                <span class="meta">
+                  <span class="num">{n}</span> دروس ·{' '}
+                  <span data-stage-outcome style={`color:var(--${st.tone}-ink)`}>{st.outcome}</span>
+                </span>
+                <span class="progress" data-needs-storage hidden style="margin-top:8px;max-width:16rem">
+                  <i data-stage-bar style="width:0%"></i>
+                </span>
               </span>
             </a>
           );
@@ -168,14 +202,77 @@ const outputs = [
   </section>
 </Base>
 
+<script define:vars={{ stageTable, coreIds, firstHref }}>
+  window.__home = { stageTable, coreIds, firstHref };
+</script>
+
 <script>
-  import { storageAvailable, read } from '../lib/progress';
+  import { storageAvailable, read, ratio } from '../lib/progress';
+
+  interface StageRow { n: number; core: string[]; all: { id: string; h: string }[] }
+  const H = (window as unknown as {
+    __home: { stageTable: StageRow[]; coreIds: string[]; firstHref: string };
+  }).__home;
+
+  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
   if (storageAvailable()) {
     const s = read();
-    if (s.last) {
-      document.querySelectorAll<HTMLElement>('[data-needs-storage]').forEach((el) => {
-        el.hidden = false;
-      });
+    const doneCount = H.coreIds.filter((id) => s.done[id]).length;
+    const pct = Math.round(ratio(s.done, H.coreIds) * 100);
+    const started = doneCount > 0 || Boolean(s.last);
+
+    document.querySelectorAll<HTMLElement>('[data-needs-storage]').forEach((el) => (el.hidden = false));
+
+    /* بطاقة الدخول: تتحول بين البداية والمتابعة بحسب حالة المتعلم */
+    const card = document.getElementById('entry-card');
+    if (card && started) {
+      card.hidden = false;
+      const arc = document.getElementById('ring-arc');
+      const C = 2 * Math.PI * 19;
+      if (arc) arc.setAttribute('stroke-dashoffset', String(C * (1 - pct / 100)));
+      const pctEl = document.getElementById('ring-pct');
+      if (pctEl) pctEl.textContent = `${pct}%`;
+
+      const nextRow = H.stageTable.flatMap((st) => st.all).find((l) => !s.done[l.id]);
+      const target = s.last?.href ?? nextRow?.h ?? H.firstHref;
+      const title = s.last?.title ?? 'ابدأ من الدرس الأول';
+
+      const kicker = document.getElementById('entry-kicker');
+      const t = document.getElementById('entry-title');
+      const meta = document.getElementById('entry-meta');
+      const btn = document.getElementById('entry-btn') as HTMLAnchorElement | null;
+      if (kicker) kicker.textContent = s.last ? 'أكمل من حيث توقفت' : 'ابدأ من الدرس الأول';
+      if (t) t.textContent = title;
+      if (meta) {
+        meta.innerHTML =
+          `أنجزت <span class="num">${doneCount}</span> من <span class="num">${H.coreIds.length}</span> درسا أساسيا`;
+      }
+      if (btn) {
+        btn.href = target;
+        btn.textContent = s.last ? 'أكمل الدرس' : 'ابدأ';
+      }
+
+      const start = document.getElementById('start-btn') as HTMLAnchorElement | null;
+      if (start && s.last) {
+        start.href = target;
+        start.textContent = 'أكمل من حيث توقفت';
+      }
     }
+
+    /* نسبة كل مسار تُحدَّث في مكانها بلا إعادة بناء البطاقة */
+    document.querySelectorAll<HTMLAnchorElement>('a[data-stage]').forEach((el) => {
+      const row = H.stageTable.find((x) => x.n === Number(el.dataset.stage));
+      if (!row) return;
+      const dn = row.core.filter((id) => s.done[id]).length;
+      const p = row.core.length ? Math.round((dn / row.core.length) * 100) : 0;
+      const bar = el.querySelector<HTMLElement>('[data-stage-bar]');
+      if (bar) bar.style.width = `${p}%`;
+      const out = el.querySelector<HTMLElement>('[data-stage-outcome]');
+      if (out && dn > 0) out.innerHTML = `أنجزت <span class="num">${dn}</span> من <span class="num">${row.core.length}</span>`;
+      const nextL = row.all.find((l) => !s.done[l.id]);
+      if (nextL) el.href = nextL.h;
+      void esc;
+    });
   }
 </script>

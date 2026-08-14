@@ -1,14 +1,9 @@
 {
   "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*.ts", "**/*.astro", "**/*.mjs"],
-  "exclude": ["dist", "node_modules", ".astro"],
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist", "node_modules", "qa-shots", "qa-lighthouse"],
   "compilerOptions": {
     "strictNullChecks": true,
-    "allowJs": true,
-    "checkJs": false,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["src/*"]
-    }
+    "noUncheckedIndexedAccess": true
   }
 }

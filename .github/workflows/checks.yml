@@ -10,7 +10,8 @@ permissions:
 
 env:
   SITE_ORIGIN: https://xr7cqa.github.io
-  SITE_BASE: /pprommept-/
+  # المسار الأساسي يُشتق من اسم المستودع، فيبقى صحيحا لو أعيدت تسميته
+  SITE_BASE: /${{ github.event.repository.name }}/
   PUPPETEER_SKIP_DOWNLOAD: '1'
 
 jobs:

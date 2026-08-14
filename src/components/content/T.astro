@@ -1,0 +1,29 @@
+---
+/**
+ * مصطلح قابل للضغط داخل النص.
+ * بلا جافاسكربت: رابط عادي يفتح المصطلح في صفحة القاموس.
+ * مع الجافاسكربت: يفتح لوحة سفلية على الهاتف ونافذة صغيرة على الكمبيوتر، بلا مغادرة الدرس.
+ */
+import { getCollection } from 'astro:content';
+import { routes } from '../../lib/url';
+
+interface Props {
+  /** معرّف المصطلح داخل مجموعة القاموس */
+  id: string;
+}
+const { id } = Astro.props;
+
+const terms = await getCollection('glossary');
+const term = terms.find((t) => t.id === id);
+if (!term) throw new Error(`مصطلح غير موجود في القاموس: ${id}`);
+const d = term.data;
+---
+
+<a
+  class="term-link"
+  href={routes.term(id)}
+  data-term={id}
+  data-term-ar={d.ar}
+  data-term-en={d.en}
+  data-term-short={d.short}
+><slot>{d.ar}</slot></a>

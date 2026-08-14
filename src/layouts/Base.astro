@@ -12,6 +12,7 @@ import alex700 from '../assets/fonts/alexandria-arabic-700-normal.woff2';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PathDrawer from '../components/PathDrawer.astro';
+import TermSheet from '../components/TermSheet.astro';
 import { url } from '../lib/url';
 
 interface Props {
@@ -37,9 +38,12 @@ const fullTitle = title === 'الرئيسية' ? 'صناعة المحتوى با
 ---
 
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="no-js">
   <head>
     <meta charset="utf-8" />
+    <!-- يُزال قبل أول رسم: يمنع انزياح التخطيط عند طي قائمة المحتويات، ويبقي القائمة
+         مفتوحة لمن يعطّل الجافاسكربت -->
+    <script is:inline>document.documentElement.classList.remove('no-js');</script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
@@ -59,6 +63,7 @@ const fullTitle = title === 'الرئيسية' ? 'صناعة المحتوى با
     </main>
     <Footer />
     {drawer && <PathDrawer />}
+    <TermSheet />
 
     <script>
       import { read, update, storageAvailable } from '../lib/progress';
@@ -127,6 +132,33 @@ const fullTitle = title === 'الرئيسية' ? 'صناعة المحتوى با
           });
         });
       });
+
+      /* ── شرح المصطلح في لوحة سفلية بدل مغادرة الدرس ── */
+      const sheet = document.getElementById('term-sheet') as HTMLDialogElement | null;
+      if (sheet && typeof sheet.showModal === 'function') {
+        const set = (sel: string, value: string) => {
+          const el = sheet.querySelector<HTMLElement>(sel);
+          if (el) el.textContent = value;
+        };
+        document.querySelectorAll<HTMLAnchorElement>('a[data-term]').forEach((link) => {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            set('[data-term-ar]', link.dataset.termAr ?? '');
+            set('[data-term-en]', `(${link.dataset.termEn ?? ''})`);
+            set('[data-term-short]', link.dataset.termShort ?? '');
+            const more = sheet.querySelector<HTMLAnchorElement>('[data-term-more]');
+            if (more) more.href = link.href;
+            sheet.showModal();
+          });
+        });
+        sheet.querySelectorAll<HTMLElement>('[data-close-sheet]').forEach((b) =>
+          b.addEventListener('click', () => sheet.close()),
+        );
+        sheet.addEventListener('click', (e) => {
+          const panel = sheet.querySelector('.sheet-panel');
+          if (panel && !panel.contains(e.target as Node)) sheet.close();
+        });
+      }
 
       /* ── أزرار النسخ ── */
       document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {

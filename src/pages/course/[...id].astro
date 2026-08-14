@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import Icon from '../../components/Icon.astro';
 import * as C from '../../components/content';
-import { stageByN, STAGES } from '../../lib/stages';
+import { stageByN } from '../../lib/stages';
 import { routes } from '../../lib/url';
 
 export async function getStaticPaths() {
@@ -26,11 +26,16 @@ export async function getStaticPaths() {
 const { entry, prev, next, siblings } = Astro.props;
 const d = entry.data;
 const st = stageByN(d.stage);
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
+
+/** أقسام الدرس الرئيسية تصنع قائمة المحتويات */
+const toc = headings.filter((h) => h.depth === 2);
 ---
 
 <Base title={d.title} description={d.summary} bodyClass="has-bottom-bar">
+  <div class="read-bar" aria-hidden="true"><i data-read-bar></i></div>
+
   <div
     data-lesson-page
     data-lesson-id={entry.id}
@@ -39,17 +44,19 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
   >
     <div class="lesson-hero" style={`background:var(--${st.tone}-bg)`}>
       <div class="wrap">
-        <p class="kicker" style={`color:var(--${st.tone}-ink)`}>
-          <a href={routes.map()} style={`color:var(--${st.tone}-ink);text-decoration:none`}>
-            المرحلة {d.stage} · {st.title}
-          </a>
-          <span aria-hidden="true"> · </span>
-          الدرس {posInStage} من {siblings.length}
-        </p>
+        <nav aria-label="مسار التنقل">
+          <ol class="crumbs" style={`color:var(--${st.tone}-ink)`}>
+            <li><a href={routes.dashboard()}>لوحتك</a></li>
+            <li><a href={routes.map()}>خريطة المسار</a></li>
+            <li><a href={`${routes.map()}#stage-${st.slug}`}>{st.title}</a></li>
+            <li><span aria-current="page">الدرس {posInStage} من {siblings.length}</span></li>
+          </ol>
+        </nav>
         <h1>{d.title}</h1>
         <p class="facts">
-          <span>{d.minutes} دقائق قراءة</span>
+          <span>{d.minutes} دقائق قراءة وتطبيق</span>
           <span>{d.core ? 'درس أساسي' : 'درس اختياري'}</span>
+          <span>المرحلة {d.stage} من 7</span>
         </p>
         <div class="rail" style="margin-top:var(--sp-4);max-width:22rem" aria-hidden="true">
           {siblings.map((_, i) => <i class={i < posInStage ? 'on' : ''} />)}
@@ -59,6 +66,20 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
 
     <div class="wrap">
       <div class="lesson-layout">
+        {toc.length > 1 && (
+          <nav class="lesson-toc" id="lesson-toc" aria-label="محتويات الدرس">
+            <button
+              class="toc-toggle" type="button"
+              aria-expanded="false" aria-controls="toc-list"
+            >محتويات الدرس ({toc.length} أقسام)</button>
+            <ul class="toc-list" id="toc-list">
+              {toc.map((h) => (
+                <li><a href={`#${h.slug}`}>{h.text}</a></li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
         <article class="lesson-body">
           <div class="box-result">
             <p class="box-h">ما ستملكه بعد هذا الدرس</p>
@@ -82,6 +103,10 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
               <span data-save-label>احفظ الدرس</span>
             </button>
           </div>
+
+          <p class="small muted" style="margin-top:var(--sp-4)" data-needs-storage>
+            الزر يعمل في الاتجاهين: اضغطه مرة ليُسجَّل الدرس منجزا، ومرة أخرى لتتراجع
+          </p>
 
           <p class="small muted" style="margin-top:var(--sp-4)" data-storage-warning hidden>
             متصفحك يمنع الحفظ المحلي، لذلك لن يُحفظ تقدمك. المحتوى والتنقل يعملان كالمعتاد
@@ -132,14 +157,23 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
             </ol>
           </div>
           <p style="margin-top:var(--sp-4)">
-            <a class="btn btn--quiet btn--sm btn--full" href={routes.map()}>عد إلى خريطة المسار</a>
+            <a class="btn btn--quiet btn--sm btn--full" href={`${routes.map()}#stage-${st.slug}`}>
+              عد إلى المرحلة
+            </a>
           </p>
           <p>
-            <a class="btn btn--quiet btn--sm btn--full" href={routes.dashboard()}>لوحتك</a>
+            <a class="btn btn--quiet btn--sm btn--full" href={routes.glossary()}>قاموس المصطلحات</a>
           </p>
         </aside>
       </div>
     </div>
+
+    {toc.length > 1 && (
+      <button class="toc-fab" type="button" data-toc-fab>
+        <Icon name="menu" size={18} />
+        <span>المحتويات</span>
+      </button>
+    )}
 
     <nav class="bottom-bar" aria-label="تنقل الدرس">
       {prev ? (
@@ -148,7 +182,7 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
           <span>السابق</span>
         </a>
       ) : (
-        <a href={routes.map()}><Icon name="map" size={18} /><span>الخريطة</span></a>
+        <a href={`${routes.map()}#stage-${st.slug}`}><Icon name="map" size={18} /><span>المرحلة</span></a>
       )}
       <button class="main" type="button" data-complete aria-pressed="false">
         <Icon name="check" size={18} />
@@ -167,15 +201,15 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
 </Base>
 
 <script>
-  import { read, update } from '../../lib/progress';
+  import { read, update, storageAvailable } from '../../lib/progress';
 
   const page = document.querySelector<HTMLElement>('[data-lesson-page]');
   if (page) {
     const id = page.dataset.lessonId!;
-
     const completeBtns = document.querySelectorAll<HTMLButtonElement>('[data-complete]');
     const saveBtns = document.querySelectorAll<HTMLButtonElement>('[data-save]');
 
+    /* ── الإنجاز والحفظ، ويعملان في الاتجاهين ── */
     function paint() {
       const s = read();
       const done = Boolean(s.done[id]);
@@ -183,12 +217,18 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
       completeBtns.forEach((b) => {
         b.setAttribute('aria-pressed', String(done));
         const l = b.querySelector<HTMLElement>('[data-complete-label]');
-        if (l) l.textContent = done ? 'أنجزته' : b.classList.contains('main') ? 'أنجزت الدرس' : 'أنجزت هذا الدرس';
+        if (l) {
+          l.textContent = done
+            ? 'أنجزته — اضغط للتراجع'
+            : b.classList.contains('main')
+              ? 'أنجزت الدرس'
+              : 'أنجزت هذا الدرس';
+        }
       });
       saveBtns.forEach((b) => {
         b.setAttribute('aria-pressed', String(saved));
         const l = b.querySelector<HTMLElement>('[data-save-label]');
-        if (l) l.textContent = saved ? 'محفوظ' : 'احفظ الدرس';
+        if (l) l.textContent = saved ? 'محفوظ — اضغط للإلغاء' : 'احفظ الدرس';
       });
     }
 
@@ -213,5 +253,106 @@ const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
     );
 
     paint();
+
+    /* ── شريط تقدم القراءة ── */
+    const bar = document.querySelector<HTMLElement>('[data-read-bar]');
+    const article = document.querySelector<HTMLElement>('.lesson-body');
+    const tocLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc-list a'));
+    const sections = tocLinks
+      .map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1))))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    let ticking = false;
+    let lastSaved = 0;
+
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+
+        if (bar && article) {
+          const start = article.offsetTop;
+          const span = Math.max(1, article.offsetHeight - window.innerHeight * 0.5);
+          const p = Math.min(1, Math.max(0, (window.scrollY - start) / span));
+          bar.style.inlineSize = `${Math.round(p * 100)}%`;
+        }
+
+        /* القسم الحالي يُميَّز في قائمة المحتويات */
+        if (sections.length) {
+          const line = window.scrollY + 120;
+          let active = 0;
+          for (let i = 0; i < sections.length; i += 1) {
+            if (sections[i]!.offsetTop <= line) active = i;
+          }
+          tocLinks.forEach((a, i) => {
+            if (i === active) a.setAttribute('aria-current', 'true');
+            else a.removeAttribute('aria-current');
+          });
+        }
+
+        /* موضع القراءة يُحفظ بتباعد حتى لا نثقل التخزين */
+        const now = Date.now();
+        if (storageAvailable() && now - lastSaved > 1500) {
+          lastSaved = now;
+          const y = Math.round(window.scrollY);
+          update((s) => {
+            if (y > 320) s.pos[id] = y;
+            else delete s.pos[id];
+          });
+        }
+
+        /* زر المحتويات العائم يظهر بعد مغادرة الترويسة */
+        const fab = document.querySelector<HTMLElement>('[data-toc-fab]');
+        if (fab) fab.dataset.visible = window.scrollY > 600 ? '1' : '0';
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* ── استئناف القراءة من الموضع المحفوظ، باختيار المتعلم لا قسرا ── */
+    const savedY = read().pos[id] ?? 0;
+    if (savedY > 320 && window.scrollY < 40) {
+      const chip = document.createElement('div');
+      chip.className = 'resume-chip';
+      chip.innerHTML =
+        '<span>تابع القراءة من حيث توقفت</span>' +
+        '<span style="display:flex;gap:8px"><button type="button" data-resume-go>انتقل</button>' +
+        '<button type="button" class="close" data-resume-close aria-label="إخفاء">✕</button></span>';
+      document.body.appendChild(chip);
+      const hide = () => chip.remove();
+      chip.querySelector('[data-resume-go]')?.addEventListener('click', () => {
+        window.scrollTo({ top: savedY, behavior: 'smooth' });
+        hide();
+      });
+      chip.querySelector('[data-resume-close]')?.addEventListener('click', hide);
+      window.setTimeout(hide, 9000);
+    }
+
+    /* ── قائمة المحتويات ──
+       مطوية على الهاتف ومفتوحة دائما على سطح المكتب، والحالة تُحسم بالـCSS قبل أول رسم */
+    const toc = document.getElementById('lesson-toc');
+    const toggle = toc?.querySelector<HTMLButtonElement>('.toc-toggle');
+    const narrow = () => window.matchMedia('(max-width: 63.99rem)').matches;
+    const setOpen = (open: boolean) => {
+      if (!toc || !toggle) return;
+      toc.dataset.open = open ? '1' : '0';
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+    toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+
+    const fab = document.querySelector<HTMLButtonElement>('[data-toc-fab]');
+    fab?.addEventListener('click', () => {
+      setOpen(true);
+      toc?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* اختيار قسم يغلق القائمة على الهاتف حتى لا تحبس المستخدم */
+    tocLinks.forEach((a) =>
+      a.addEventListener('click', () => {
+        if (narrow()) setOpen(false);
+      }),
+    );
   }
 </script>

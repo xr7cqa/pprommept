@@ -25,7 +25,7 @@ function resolveTarget(href) {
   const rel = href.slice(BASE.length).split('#')[0].split('?')[0];
   if (rel === '' || rel.endsWith('/')) return path.join(DIST, rel, 'index.html');
   const direct = path.join(DIST, rel);
-  if (exists(direct)) return direct;
+  if (exists(direct) && fs.statSync(direct).isFile()) return direct;
   return path.join(DIST, rel, 'index.html');
 }
 
@@ -38,7 +38,7 @@ function run() {
   const idsOf = (file) => {
     if (idCache.has(file)) return idCache.get(file);
     const set = new Set();
-    if (exists(file)) {
+    if (exists(file) && fs.statSync(file).isFile()) {
       const body = fs.readFileSync(file, 'utf8');
       for (const m of body.matchAll(/\sid="([^"]+)"/g)) set.add(m[1]);
     }

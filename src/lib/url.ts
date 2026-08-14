@@ -2,9 +2,15 @@
 const BASE = import.meta.env.BASE_URL; // ينتهي دائما بشرطة مائلة في إعدادنا
 
 export function url(path = ''): string {
-  const clean = path.replace(/^\/+/, '');
-  if (clean === '') return BASE;
-  return BASE + (clean.endsWith('/') || clean.includes('#') || /\.\w+$/.test(clean) ? clean : clean + '/');
+  const raw = path.replace(/^\/+/, '');
+  if (raw === '') return BASE;
+  // المرساة تُفصل أولا حتى تبقى الشرطة المائلة في نهاية المسار قبلها
+  const hashAt = raw.indexOf('#');
+  const hash = hashAt >= 0 ? raw.slice(hashAt) : '';
+  const clean = hashAt >= 0 ? raw.slice(0, hashAt) : raw;
+  if (clean === '') return BASE + hash;
+  const withSlash = clean.endsWith('/') || /\.\w+$/.test(clean) ? clean : clean + '/';
+  return BASE + withSlash + hash;
 }
 
 export const routes = {
@@ -20,5 +26,8 @@ export const routes = {
   apps: () => url('toolkit'),
   app: (id: string) => url(`toolkit/${id}`),
   search: () => url('search'),
+  glossary: () => url('glossary'),
+  term: (id: string) => url(`glossary#t-${id}`),
+  settings: () => url('settings'),
   finish: () => url('finish'),
 };

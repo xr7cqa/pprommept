@@ -272,3 +272,89 @@
   font-family: var(--f-ui); font-size: var(--t-xs); color: var(--ink-mute);
   margin-top: var(--sp-3); text-align: start;
 }
+
+/* ═══════════ المصطلح داخل النص ═══════════ */
+.term-link {
+  color: var(--violet); text-decoration: none;
+  border-bottom: 1.5px dashed color-mix(in srgb, var(--violet) 55%, transparent);
+  padding-block-end: 1px; cursor: help;
+}
+.term-link:hover,
+.term-link:focus-visible { color: var(--ink); border-bottom-color: var(--ink); }
+.term-link::after {
+  content: '?';
+  font-family: var(--f-ui); font-size: 0.66em; font-weight: 600;
+  vertical-align: super; margin-inline-start: 2px;
+  color: var(--violet); direction: ltr; unicode-bidi: isolate;
+}
+
+/* ═══════════ لوحة سفلية على الهاتف، نافذة صغيرة على الكمبيوتر ═══════════ */
+.sheet {
+  border: 0; padding: 0; margin: 0; max-inline-size: none; max-block-size: none;
+  inline-size: 100%; block-size: 100%; background: transparent;
+  color: var(--ink);
+}
+.sheet::backdrop { background: rgba(36, 30, 26, 0.42); }
+.sheet:not([open]) { display: none; }
+.sheet-panel {
+  position: absolute; inset-inline: 0; inset-block-end: 0;
+  background: var(--paper);
+  border-start-start-radius: var(--r-xl); border-start-end-radius: var(--r-xl);
+  padding: var(--sp-3) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom));
+  box-shadow: var(--sh-2);
+  max-block-size: 82vh; overflow-y: auto;
+}
+.sheet-grab {
+  inline-size: 42px; block-size: 4px; border-radius: 99px;
+  background: var(--line); margin: 0 auto var(--sp-3);
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-2); }
+.sheet-title {
+  font-family: var(--f-display); font-size: var(--t-h3); margin: 0 0 var(--sp-3);
+  display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: baseline;
+}
+.sheet-title bdi { font-size: 0.68em; color: var(--violet); font-weight: 400; }
+.sheet-body { font-size: var(--t-base); line-height: 1.8; margin-bottom: var(--sp-4); }
+@media (min-width: 48rem) {
+  .sheet-panel {
+    inset: 50% auto auto 50%; transform: translate(-50%, -50%);
+    inline-size: min(30rem, 92vw); border-radius: var(--r-xl);
+    padding-block-end: var(--sp-5);
+  }
+  .sheet-grab { display: none; }
+}
+
+/* ═══════════ بطاقة مصطلح في صفحة القاموس ═══════════ */
+.term-card {
+  background: var(--c-prompt); border-radius: var(--r-lg);
+  padding: var(--sp-5); scroll-margin-top: 76px;
+}
+.term-card h2 {
+  font-size: var(--t-xl); margin-bottom: var(--sp-2);
+  display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: baseline;
+}
+.term-card h2 bdi { font-size: 0.72em; color: var(--violet); font-family: var(--f-ui); font-weight: 400; }
+.term-card .short { font-family: var(--f-ui); color: var(--violet); margin-bottom: var(--sp-3); }
+.term-card :last-child { margin-bottom: 0; }
+.term-card .links { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }
+
+/* ═══════════ بطاقة الدخول في الصفحة الرئيسية ═══════════ */
+.entry-card {
+  display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap;
+  margin-top: var(--sp-6); max-width: 34rem;
+  background: rgba(255, 255, 255, 0.66); border-radius: var(--r-lg);
+  padding: var(--sp-4) var(--sp-5);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.entry-ring { position: relative; inline-size: 64px; block-size: 64px; flex: 0 0 auto; }
+.entry-ring svg { display: block; }
+.entry-ring-pct {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--f-ui); font-weight: 600; font-size: var(--t-xs); color: var(--ink);
+}
+.entry-title {
+  font-family: var(--f-ui); font-weight: 600; font-size: var(--t-base);
+  line-height: 1.5; margin: 0 0 2px;
+}
+.entry-card .btn { flex: 0 0 auto; }
+@media (max-width: 25rem) { .entry-card .btn { flex: 1 1 100%; } }

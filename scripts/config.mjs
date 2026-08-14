@@ -30,6 +30,12 @@ export const SAMPLE_PAGES = [
   { path: 'platforms/', name: 'platforms' },
   { path: 'toolkit/', name: 'toolkit' },
   { path: 'search/', name: 'search' },
+  { path: 'glossary/', name: 'glossary' },
+  { path: 'settings/', name: 'settings' },
+  { path: 'course/28-the-hook/', name: 'lesson-mid' },
+  { path: 'course/44-content-to-opportunity/', name: 'lesson-last' },
+  { path: 'platforms/tiktok/', name: 'platform-tiktok' },
+  { path: 'prompts/tiktok-hook/', name: 'prompt-tiktok' },
   { path: 'finish/', name: 'finish' },
 ];
 
