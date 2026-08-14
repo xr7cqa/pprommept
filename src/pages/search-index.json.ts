@@ -102,6 +102,19 @@ export const GET: APIRoute = async () => {
     });
   }
 
+  for (const c of await getCollection('cases')) {
+    const body = stripMdx(c.body ?? '');
+    docs.push({
+      t: c.data.title,
+      x: c.data.summary,
+      h: routes.case(c.id),
+      k: 'دراسة حالة',
+      n: normalizeAr(
+        [c.data.title, c.data.summary, c.data.subject, c.data.field, c.data.principle, c.data.keywords.join(' '), body].join(' '),
+      ),
+    });
+  }
+
   return new Response(JSON.stringify({ v: 2, docs }), {
     headers: { 'content-type': 'application/json; charset=utf-8' },
   });

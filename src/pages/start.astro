@@ -1,0 +1,173 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Kind from '../components/Kind.astro';
+import { STAGES } from '../lib/stages';
+import { routes } from '../lib/url';
+
+const lessons = (await getCollection('course')).sort(
+  (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+);
+const first = lessons[0];
+const coreCount = lessons.filter((l) => l.data.core).length;
+const optionalCount = lessons.length - coreCount;
+const firstHref = first ? routes.lesson(first.id) : routes.map();
+---
+
+<Base
+  title="ابدأ من هنا"
+  description="كيف يعمل هذا الكورس: مسار أساسي تمشي فيه بالترتيب، ومكتبة تطبيق تفتحها وقت الحاجة"
+>
+  <section class="page-hero" style="background:var(--s1-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s1-ink)">قبل أن تبدأ</p>
+      <h1>ابدأ من هنا</h1>
+      <p class="lead">
+        الكورس أكبر مما يُقرأ في جلسة، وهذا مقصود. لكنك لست مطالبا بقراءة كل صفحة فيه.
+        هذه الصفحة تشرح لك ما الذي تمشي فيه بالترتيب، وما الذي تفتحه وقت الحاجة وحدها
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <section>
+      <h2>الكورس جزآن لا جزء واحد</h2>
+
+      <div class="grid grid-2" style="margin-top:var(--sp-4)">
+        <div class="box-result" style="margin:0">
+          <p class="box-h">المسار الأساسي</p>
+          <p style="margin-bottom:var(--sp-3)">
+            سبع مراحل بالترتيب، فيها <span class="num">{coreCount}</span> درسا أساسيا. هذا
+            ما يُحسب في تقدمك، وهو الطريق الذي يوصلك من مجال غير واضح إلى أول قطع منشورة
+          </p>
+          <p style="margin-bottom:0"><Kind kind="core" /></p>
+        </div>
+
+        <div class="box-note" style="margin:0">
+          <p class="box-h">مكتبة التطبيق</p>
+          <p style="margin-bottom:var(--sp-3)">
+            برومبتات وقوالب ودراسات حالة وكتيبات منصات وقاموس. لا تُقرأ بالترتيب ولا تدخل
+            في حساب تقدمك. تفتحها حين يحيلك إليها درس، أو حين تحتاجها في عملك
+          </p>
+          <p style="margin-bottom:0">
+            <Kind kind="reference" /> <Kind kind="prompt" /> <Kind kind="template" />
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:var(--sp-7)">
+      <h2>كيف تميّز ما أمامك</h2>
+      <p class="muted">كل بطاقة في الموقع تحمل وسم نوعها، وشكل الوسم يختلف لا لونه وحده</p>
+
+      <div class="table-scroll" tabindex="0" role="region" aria-label="جدول أنواع المواد">
+        <table>
+          <thead>
+            <tr><th>النوع</th><th>ما هو</th><th>هل يدخل في تقدمك</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><Kind kind="core" /></td>
+              <td>درس في المسار، تمشي فيه بالترتيب</td>
+              <td>نعم</td>
+            </tr>
+            <tr>
+              <td><Kind kind="apply" /></td>
+              <td>درس تخرج منه بمخرج مكتوب تملكه</td>
+              <td>نعم</td>
+            </tr>
+            <tr>
+              <td><Kind kind="template" /></td>
+              <td>حقول تملؤها فيخرج لك ملف يخصك</td>
+              <td>لا، لكنه يظهر في لوحتك</td>
+            </tr>
+            <tr>
+              <td><Kind kind="prompt" /></td>
+              <td>نص جاهز تنسخه إلى أداة الذكاء الاصطناعي</td>
+              <td>لا</td>
+            </tr>
+            <tr>
+              <td><Kind kind="case" /></td>
+              <td>حالة حقيقية مفصولة إلى موثق وتفسير ومبدأ</td>
+              <td>لا</td>
+            </tr>
+            <tr>
+              <td><Kind kind="reference" /></td>
+              <td>كتيب منصة أو مصطلح أو ملحق، يُفتح وقت الحاجة</td>
+              <td>لا</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small muted">
+        في المسار <span class="num">{optionalCount}</span> درسا اختياريا كذلك، وهي معلّمة
+        بوضوح ولا تعطّل تقدمك إن تجاوزتها
+      </p>
+    </section>
+
+    <section style="margin-top:var(--sp-7)">
+      <h2>طريقة عمل تنجح</h2>
+      <ol class="flow">
+        <li>
+          <div>
+            <strong>ادرس درسا واحدا في الجلسة</strong>
+            <span>لا ثلاثة. كل درس ينتهي بتطبيق، والتطبيق هو ما يبقى منه بعد أسبوع</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>نفّذ التطبيق قبل أن تنتقل</strong>
+            <span
+              >الدرس الذي تقرؤه ولا تطبّقه يصير معلومة تُنسى. والدرس الذي تطبّقه يصير ملفا
+              تملكه</span
+            >
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>افتح المكتبة حين يحيلك الدرس إليها</strong>
+            <span>لا تقرأها كلها. البرومبت الذي تفتحه بلا مهمة أمامك لا تتذكره</span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>عد إلى لوحتك لترى أين وصلت</strong>
+            <span>تقدمك محفوظ في متصفحك وحده، ويظهر في اللوحة مع مخرجاتك</span>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section style="margin-top:var(--sp-7)">
+      <h2>المراحل السبع</h2>
+      <p class="muted">لكل مرحلة ما تتعلمه فيها وما تخرج به منها</p>
+      <div class="grid grid-2" style="margin-top:var(--sp-4)">
+        {
+          STAGES.map((st) => (
+            <a
+              class="stage-card"
+              style={`background:var(--${st.tone}-bg);align-items:flex-start`}
+              href={routes.stage(st.slug)}
+            >
+              <span class="n num" style={`color:var(--${st.tone}-ink)`}>
+                {st.n}
+              </span>
+              <span>
+                <span class="t" style={`color:var(--${st.tone}-ink)`}>{st.title}</span>
+                <span class="d" style="display:block;margin-top:4px">{st.promise}</span>
+                <span class="meta">تخرج بـ {st.outcome}</span>
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <div class="box-result" style="margin-top:var(--sp-7)">
+      <p class="box-h">خطوتك التالية</p>
+      <p>ابدأ من الدرس الأول في المرحلة الأولى. لا تحتاج تجهيز شيء قبله</p>
+      <p style="margin-bottom:0"><a class="btn" href={firstHref}>ابدأ الدرس الأول</a></p>
+    </div>
+  </div>
+</Base>

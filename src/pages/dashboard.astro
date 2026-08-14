@@ -101,17 +101,17 @@ const first = lessons[0];
     <section style="margin-top:var(--sp-7)">
       <h2>وصول سريع</h2>
       <div class="grid grid-3" style="margin-top:var(--sp-4)">
-        <a class="stage-card" style="background:var(--s6-bg)" href={routes.platforms()}>
-          <span class="n" style="color:var(--s6-ink)"><Icon name="grid" size={24} /></span>
-          <span><span class="t">مكتبة المنصات</span></span>
+        <a class="stage-card" style="background:var(--s2-bg)" href={routes.map()}>
+          <span class="n" style="color:var(--s2-ink)"><Icon name="grid" size={24} /></span>
+          <span><span class="t">المسار الأساسي</span></span>
         </a>
-        <a class="stage-card" style="background:var(--s4-bg)" href={routes.prompts()}>
-          <span class="n" style="color:var(--s4-ink)"><Icon name="copy" size={24} /></span>
-          <span><span class="t">مكتبة البرومبتات</span></span>
+        <a class="stage-card" style="background:var(--s6-bg)" href={routes.library()}>
+          <span class="n" style="color:var(--s6-ink)"><Icon name="copy" size={24} /></span>
+          <span><span class="t">مكتبة التطبيق</span></span>
         </a>
-        <a class="stage-card" style="background:var(--s5-bg)" href={routes.apps()}>
-          <span class="n" style="color:var(--s5-ink)"><Icon name="check" size={24} /></span>
-          <span><span class="t">القوالب والتطبيقات</span></span>
+        <a class="stage-card" style="background:var(--s1-bg)" href={routes.start()}>
+          <span class="n" style="color:var(--s1-ink)"><Icon name="check" size={24} /></span>
+          <span><span class="t">ابدأ من هنا</span></span>
         </a>
       </div>
     </section>
@@ -211,16 +211,21 @@ const first = lessons[0];
     }
   }
 
-  /* ── المخرجات المكتملة: القوالب التي بدأها ── */
+  /* ── المخرجات: القوالب التي بدأها أو أنهاها، مع عدد الحقول المملوءة ── */
   const outputs = document.getElementById('outputs');
   if (outputs) {
-    const started = D.appTable.filter((a) => s.apps[a.id]);
+    const started = D.appTable.filter((a) => s.apps[a.id] || s.appsDone[a.id]);
     outputs.innerHTML = started.length
       ? started
-          .map(
-            (a) =>
-              `<a class="lesson-card" href="${esc(a.h)}"><span class="t">${esc(a.t)}</span><span class="o">بدأت هذا القالب</span></a>`,
-          )
+          .map((a) => {
+            const done = Boolean(s.appsDone[a.id]);
+            const filled = Object.keys(s.fields).filter(
+              (k) => k.startsWith(a.id + ':') && s.fields[k]?.trim(),
+            ).length;
+            const state = done ? 'أنهيته' : 'بدأته';
+            const detail = filled > 0 ? `${state} · ${filled} حقلا مملوءا` : state;
+            return `<a class="lesson-card" href="${esc(a.h)}"><span class="t">${esc(a.t)}</span><span class="o">${esc(detail)}</span></a>`;
+          })
           .join('')
       : `<p class="empty" style="grid-column:1/-1">لم تبدأ أي قالب بعد. القوالب هي المكان الذي تتحول فيه الدروس إلى ملفات تملكها</p>`;
   }

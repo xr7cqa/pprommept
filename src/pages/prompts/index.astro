@@ -2,22 +2,36 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import { routes } from '../../lib/url';
+import {
+  PLATFORM_SLUG,
+  TASK_SLUG,
+  PLATFORM_NOTE,
+  TASK_NOTE,
+  toneFor,
+} from '../../lib/prompt-groups';
 
-const items = (await getCollection('prompts')).sort(
-  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title, 'ar'),
-);
+const items = await getCollection('prompts');
 
-const platforms = Array.from(new Set(items.map((p) => p.data.platform)));
-const tasks = Array.from(new Set(items.map((p) => p.data.task)));
+/** المجموعات مرتبة بالعدد النازل، والعام آخرا لأنه ليس منصة */
+const platformOrder = Object.keys(PLATFORM_SLUG);
+const platforms = platformOrder
+  .map((name) => ({
+    name,
+    slug: PLATFORM_SLUG[name] as string,
+    note: PLATFORM_NOTE[name] ?? '',
+    count: items.filter((p) => p.data.platform === name).length,
+  }))
+  .filter((g) => g.count > 0);
 
-const rows = items.map((p) => ({
-  id: p.id,
-  title: p.data.title,
-  platform: p.data.platform,
-  task: p.data.task,
-  when: p.data.when,
-  href: routes.prompt(p.id),
-}));
+const tasks = Object.keys(TASK_SLUG)
+  .map((name) => ({
+    name,
+    slug: TASK_SLUG[name] as string,
+    note: TASK_NOTE[name] ?? '',
+    count: items.filter((p) => p.data.task === name).length,
+  }))
+  .filter((g) => g.count > 0)
+  .sort((a, b) => b.count - a.count);
 ---
 
 <Base
@@ -29,8 +43,8 @@ const rows = items.map((p) => ({
       <p class="eyebrow" style="color:var(--s4-ink)">مكتبة مرجعية</p>
       <h1>البرومبتات</h1>
       <p class="lead">
-        {items.length} برومبتا، لكل واحد مهمة واضحة ومتغيرات تملؤها أنت. اختر المنصة والمهمة،
-        أو ابحث بالكلمة
+        {items.length} برومبتا، لكل واحد مهمة واضحة ومتغيرات تملؤها أنت. ادخل من المنصة التي
+        تنشر فيها، أو من المهمة التي أمامك الآن
       </p>
     </div>
   </section>
@@ -38,118 +52,154 @@ const rows = items.map((p) => ({
   <div class="wrap" style="margin-top:var(--sp-6)">
     <form class="search-form" role="search" onsubmit="return false">
       <label class="sr-only" for="q">ابحث داخل مكتبة البرومبتات</label>
-      <input class="search-input" id="q" type="search" placeholder="ابحث بالمهمة أو الكلمة" autocomplete="off" />
+      <input
+        class="search-input"
+        id="q"
+        type="search"
+        placeholder="ابحث بالمهمة أو الكلمة"
+        autocomplete="off"
+      />
     </form>
 
-    <fieldset style="border:0;padding:0;margin:0 0 var(--sp-4)">
-      <legend class="eyebrow">المنصة</legend>
-      <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2)">
-        <button class="chip chip--on" type="button" data-filter="platform" data-value="">كل المنصات</button>
-        {platforms.map((p) => (
-          <button class="chip" type="button" data-filter="platform" data-value={p}>{p}</button>
-        ))}
-      </div>
-    </fieldset>
-
-    <fieldset style="border:0;padding:0;margin:0 0 var(--sp-5)">
-      <legend class="eyebrow">المهمة</legend>
-      <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2)">
-        <button class="chip chip--on" type="button" data-filter="task" data-value="">كل المهمات</button>
-        {tasks.map((t) => (
-          <button class="chip" type="button" data-filter="task" data-value={t}>{t}</button>
-        ))}
-      </div>
-    </fieldset>
-
-    <p class="small muted" id="count" aria-live="polite"></p>
-
-    <div class="grid grid-2" id="list" style="margin-top:var(--sp-3)">
-      {
-        rows.map((p) => (
-          <a
-            class="lesson-card"
-            href={p.href}
-            data-platform={p.platform}
-            data-task={p.task}
-            data-text={`${p.title} ${p.when} ${p.task} ${p.platform}`}
-            style="background:var(--s4-bg);box-shadow:none"
-          >
-            <span class="t">{p.title}</span>
-            <span class="o">{p.when}</span>
-            <span class="row">
-              <span class="chip">{p.platform}</span>
-              <span class="chip">{p.task}</span>
-              <span class="badge badge--done" data-fav hidden>مفضل</span>
-            </span>
-          </a>
-        ))
-      }
+    <div id="results" hidden>
+      <p class="small muted" id="count" aria-live="polite"></p>
+      <div class="grid grid-2" id="hits" style="margin-top:var(--sp-3)"></div>
+      <p class="empty" id="empty" hidden>لا يوجد برومبت يطابق بحثك. جرّب كلمة أوسع</p>
     </div>
-    <p class="empty" id="empty" hidden>لا يوجد برومبت يطابق هذا الاختيار. جرّب اختيارا أوسع</p>
+
+    <div id="browse">
+      <section>
+        <h2>ادخل من المنصة</h2>
+        <p class="muted">برومبتات كل منصة مكتوبة بمنطقها، لا نصا عاما مبدلا فيه الاسم</p>
+        <div class="grid grid-2" style="margin-top:var(--sp-4)">
+          {
+            platforms.map((g, i) => (
+              <a
+                class="stage-card"
+                style={`background:var(--${toneFor(i)}-bg);align-items:flex-start`}
+                href={routes.promptPlatform(g.slug)}
+              >
+                <span>
+                  <span class="t" style={`color:var(--${toneFor(i)}-ink)`}>{g.name}</span>
+                  <span class="d" style="display:block;margin-top:4px">{g.note}</span>
+                  <span class="meta">{g.count} برومبتا</span>
+                </span>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+
+      <section style="margin-top:var(--sp-7)">
+        <h2>أو من المهمة</h2>
+        <p class="muted">حين تعرف ما تريد عمله ولا يهمك على أي منصة</p>
+        <div class="grid grid-3" style="margin-top:var(--sp-4)">
+          {
+            tasks.map((g, i) => (
+              <a
+                class="lesson-card"
+                href={routes.promptTask(g.slug)}
+                style="box-shadow:none"
+              >
+                <span class="t">{g.name}</span>
+                <span class="o">{g.note}</span>
+                <span class="meta">{g.count} برومبتا</span>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+
+      <div class="box-note" style="margin-top:var(--sp-7)">
+        <p class="box-h">كيف تستعمل أي برومبت</p>
+        <p style="margin-bottom:0">
+          كل برومبت فيه شرائح ملونة هي المتغيرات التي تملؤها أنت قبل الإرسال. وأهمها
+          <bdi>{'{{ملف_السياق}}'}</bdi> — الصقه من قالب ملف السياق، فهو ما يجعل المخرج يشبه
+          مجالك لا مجالا عاما
+        </p>
+      </div>
+    </div>
   </div>
 </Base>
 
 <script>
-  import { read } from '../../lib/progress';
+  import { normalizeAr } from '../../lib/normalize';
+  import { url } from '../../lib/url';
 
-  const cards = Array.from(document.querySelectorAll<HTMLElement>('#list > a'));
+  type Doc = { t: string; w: string; p: string; k: string; h: string; n: string };
+
+  const q = document.getElementById('q') as HTMLInputElement | null;
+  const results = document.getElementById('results');
+  const browse = document.getElementById('browse');
+  const hits = document.getElementById('hits');
   const count = document.getElementById('count');
   const empty = document.getElementById('empty');
-  const q = document.getElementById('q') as HTMLInputElement | null;
-  const state = { platform: '', task: '', text: '' };
 
-  /* تطبيع عربي خفيف حتى تتطابق الهمزات والألفات وأشكال الياء والتاء المربوطة */
-  function norm(s: string): string {
-    return s
-      .toLowerCase()
-      .replace(/[ً-ْٰـ]/g, '')
-      .replace(/[آأإٱ]/g, 'ا')
-      .replace(/ى/g, 'ي')
-      .replace(/ة/g, 'ه')
-      .replace(/ؤ/g, 'و')
-      .replace(/ئ/g, 'ي')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
+  let docs: Doc[] | null = null;
+  let loading = false;
 
-  function apply() {
-    let n = 0;
-    for (const c of cards) {
-      const okP = !state.platform || c.dataset.platform === state.platform;
-      const okT = !state.task || c.dataset.task === state.task;
-      const okQ = !state.text || norm(c.dataset.text ?? '').includes(state.text);
-      const show = okP && okT && okQ;
-      c.hidden = !show;
-      if (show) n += 1;
+  /* الفهرس يُجلب عند أول كتابة لا عند فتح الصفحة، فتبقى الصفحة الأولى خفيفة */
+  async function load(): Promise<Doc[]> {
+    if (docs) return docs;
+    if (loading) return [];
+    loading = true;
+    try {
+      const res = await fetch(url('prompts-index.json'));
+      const data = (await res.json()) as { docs: Doc[] };
+      docs = data.docs;
+      return docs;
+    } catch {
+      docs = [];
+      return docs;
+    } finally {
+      loading = false;
     }
-    if (count) count.textContent = `${n} برومبتا معروضا`;
-    if (empty) empty.hidden = n !== 0;
   }
 
-  document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) => {
-    b.addEventListener('click', () => {
-      const key = b.dataset.filter as 'platform' | 'task';
-      state[key] = b.dataset.value ?? '';
-      document
-        .querySelectorAll<HTMLElement>(`[data-filter="${key}"]`)
-        .forEach((x) => x.classList.toggle('chip--on', x === b));
-      apply();
-    });
-  });
+  const esc = (s: string) =>
+    s.replace(/[&<>"']/g, (c) =>
+      c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;',
+    );
 
+  /* حد أعلى للنتائج المرسومة: البحث أداة وصول لا عرض للمكتبة كلها */
+  const MAX = 24;
+
+  function render(list: Doc[], term: string) {
+    if (!hits || !count || !empty) return;
+    const shown = list.slice(0, MAX);
+    hits.innerHTML = shown
+      .map(
+        (d) =>
+          `<a class="lesson-card" href="${esc(d.h)}" style="box-shadow:none">` +
+          `<span class="t">${esc(d.t)}</span>` +
+          `<span class="o">${esc(d.w)}</span>` +
+          `<span class="row"><span class="chip">${esc(d.p)}</span><span class="chip">${esc(d.k)}</span></span>` +
+          `</a>`,
+      )
+      .join('');
+    count.textContent =
+      list.length > MAX
+        ? `${list.length} نتيجة، تُعرض أول ${MAX}. ضيّق بحثك للوصول أسرع`
+        : `${list.length} نتيجة`;
+    empty.hidden = list.length !== 0;
+    void term;
+  }
+
+  let timer: number | undefined;
   q?.addEventListener('input', () => {
-    state.text = norm(q.value);
-    apply();
+    window.clearTimeout(timer);
+    timer = window.setTimeout(async () => {
+      const term = normalizeAr(q.value.trim());
+      if (term.length < 2) {
+        results?.setAttribute('hidden', '');
+        browse?.removeAttribute('hidden');
+        return;
+      }
+      const all = await load();
+      const list = all.filter((d) => d.n.includes(term));
+      browse?.setAttribute('hidden', '');
+      results?.removeAttribute('hidden');
+      render(list, term);
+    }, 160);
   });
-
-  const s = read();
-  cards.forEach((c) => {
-    const id = c.getAttribute('href')?.split('/').filter(Boolean).pop() ?? '';
-    if (s.favPrompts[id]) {
-      const f = c.querySelector<HTMLElement>('[data-fav]');
-      if (f) f.hidden = false;
-    }
-  });
-
-  apply();
 </script>

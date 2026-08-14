@@ -9,7 +9,10 @@
  */
 
 export const STORE_KEY = 'pa.course';
-export const STORE_VERSION = 2;
+export const STORE_VERSION = 3;
+
+/** أقصى طول لقيمة حقل واحد داخل قالب، يمنع امتلاء المساحة برسالة واحدة */
+export const FIELD_MAX = 4000;
 
 export interface Snapshot {
   v: number;
@@ -23,6 +26,10 @@ export interface Snapshot {
   checks: Record<string, true>;
   /** التطبيقات التي بدأها */
   apps: Record<string, number>;
+  /** ما كتبه المتعلم داخل حقول القوالب: «معرّف القالب:مفتاح الحقل» ← النص */
+  fields: Record<string, string>;
+  /** القوالب التي أعلن المتعلم اكتمالها */
+  appsDone: Record<string, number>;
   /** موضع القراءة التقريبي داخل كل درس، بالبكسل */
   pos: Record<string, number>;
   /** آخر درس تمت زيارته فعلا */
@@ -30,7 +37,18 @@ export interface Snapshot {
 }
 
 function fresh(): Snapshot {
-  return { v: STORE_VERSION, done: {}, saved: {}, favPrompts: {}, checks: {}, apps: {}, pos: {}, last: null };
+  return {
+    v: STORE_VERSION,
+    done: {},
+    saved: {},
+    favPrompts: {},
+    checks: {},
+    apps: {},
+    fields: {},
+    appsDone: {},
+    pos: {},
+    last: null,
+  };
 }
 
 let available: boolean | null = null;
@@ -76,6 +94,18 @@ function sanitizeChecks(x: unknown): Record<string, true> {
   return out;
 }
 
+/** نصوص الحقول: تُقصّ عند الحد الأقصى ولا تُرفض، حتى لا يخسر المتعلم ما كتبه */
+function sanitizeFields(x: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!isPlainRecord(x)) return out;
+  for (const [k, v] of Object.entries(x)) {
+    if (typeof k === 'string' && k.length > 0 && k.length < 240 && typeof v === 'string') {
+      out[k] = v.slice(0, FIELD_MAX);
+    }
+  }
+  return out;
+}
+
 function sanitizeLast(x: unknown): Snapshot['last'] {
   if (!isPlainRecord(x)) return null;
   const { id, title, href, stage, ts } = x as Record<string, unknown>;
@@ -94,7 +124,11 @@ function sanitizeLast(x: unknown): Snapshot['last'] {
  * ترقية البيانات من إصدار أقدم.
  * القاعدة: لا تُفقد بيانات المتعلم عند تحديث الموقع.
  *  · الإصدار 1 → 2: أضيف حقل مواضع القراءة، وبقية الحقول تُنقل كما هي
+ *  · الإصدار 2 → 3: أضيف نص حقول القوالب وحالة اكتمالها، وبقية الحقول تُنقل كما هي
  *  · إصدار أحدث من المعروف: يُتجاهل لأننا لا نعرف بنيته، ونبدأ من قيم سليمة
+ *
+ * الترقية تقرأ كل حقل على حدة، فالحقول غير الموجودة في الإصدار القديم
+ * تبدأ فارغة بدل أن تُفقد بقية البيانات.
  */
 function upgrade(raw: Record<string, unknown>): Snapshot {
   const v = typeof raw['v'] === 'number' ? raw['v'] : 0;
@@ -106,6 +140,8 @@ function upgrade(raw: Record<string, unknown>): Snapshot {
     favPrompts: sanitizeMap(raw['favPrompts']),
     checks: sanitizeChecks(raw['checks']),
     apps: sanitizeMap(raw['apps']),
+    fields: sanitizeFields(raw['fields']),
+    appsDone: sanitizeMap(raw['appsDone']),
     pos: sanitizeMap(raw['pos']),
     last: sanitizeLast(raw['last']),
   };

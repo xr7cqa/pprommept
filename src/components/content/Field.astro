@@ -1,0 +1,77 @@
+---
+/**
+ * حقل إدخال داخل قالب.
+ * يُحفظ محليا في متصفح المتعلم وحده ولا يُرسل إلى أي خادم.
+ * المفتاح يُبنى من معرّف القالب ومفتاح الحقل حتى لا تتصادم القوالب.
+ */
+interface Props {
+  /** مفتاح الحقل داخل القالب، ثابت لا يتغير بعد النشر */
+  name: string;
+  label: string;
+  /** ما الذي يُكتب هنا، بمثال مختصر */
+  hint?: string;
+  /** عدد الأسطر: 1 يعطي حقلا مفردا */
+  rows?: number;
+  placeholder?: string;
+}
+const { name, label, hint, rows = 3, placeholder } = Astro.props;
+const id = `f-${name}`;
+---
+
+<div class="field">
+  <label for={id}>{label}</label>
+  {hint && <p class="field-hint">{hint}</p>}
+  {
+    rows === 1 ? (
+      <input class="field-in" type="text" id={id} data-field={name} placeholder={placeholder} autocomplete="off" />
+    ) : (
+      <textarea class="field-in" id={id} data-field={name} rows={rows} placeholder={placeholder} />
+    )
+  }
+</div>
+
+<style>
+  .field {
+    margin: var(--sp-4) 0;
+  }
+
+  .field label {
+    display: block;
+    font-family: var(--f-ui);
+    font-size: var(--t-base);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .field-hint {
+    font-family: var(--f-ui);
+    font-size: var(--t-sm);
+    color: var(--ink-soft);
+    margin: 0 0 var(--sp-2);
+  }
+
+  .field-in {
+    inline-size: 100%;
+    font-family: var(--f-body);
+    font-size: var(--t-base);
+    line-height: 1.7;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-sm);
+    padding: var(--sp-3);
+    /* الحد الأدنى للمس على الهاتف */
+    min-block-size: 48px;
+    resize: vertical;
+  }
+
+  .field-in:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    border-color: transparent;
+  }
+
+  .field-in::placeholder {
+    color: var(--ink-mute);
+  }
+</style>

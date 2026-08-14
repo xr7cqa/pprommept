@@ -36,6 +36,9 @@ export const SAMPLE_PAGES = [
   { path: 'course/44-content-to-opportunity/', name: 'lesson-last' },
   { path: 'platforms/tiktok/', name: 'platform-tiktok' },
   { path: 'prompts/tiktok-hook/', name: 'prompt-tiktok' },
+  { path: 'prompts/platform/tiktok/', name: 'prompts-platform' },
+  { path: 'start/', name: 'start' },
+  { path: 'library/', name: 'library' },
   { path: 'finish/', name: 'finish' },
 ];
 

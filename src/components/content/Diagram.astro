@@ -1,7 +1,7 @@
 ---
 /** مخططات SVG أصلية — النص العربي داخلها نص حقيقي لا صورة */
 interface Props {
-  kind: 'decision' | 'humantool' | 'repurpose' | 'diagnose' | 'funnel' | 'pillars';
+  kind: 'decision' | 'humantool' | 'repurpose' | 'diagnose' | 'funnel' | 'pillars' | 'delegation' | 'layers';
   caption?: string;
 }
 const { kind, caption } = Astro.props;
@@ -13,6 +13,8 @@ const captions: Record<Props['kind'], string> = {
   diagnose: 'ابدأ من أعلى القمع: كل رقم ضعيف يشير إلى طبقة مختلفة',
   funnel: 'من محتوى يُقرأ إلى ثقة تُبنى إلى فرصة تصل',
   pillars: 'كل عمود يخدم هدفا مختلفا، والتوازن بينها يمنع أن يصير حسابك إعلانا',
+  delegation: 'كلما نزلت في السلّم زادت المادة التي تعطيها، وارتفعت جودة ما يخرج منها',
+  layers: 'اقرأ كل حالة على ثلاث طبقات، ولا تخلط التفسير بالموثق',
 };
 const cap = caption ?? captions[kind];
 ---
@@ -166,6 +168,47 @@ const cap = caption ?? captions[kind];
           </>
         ))}
         <line x1="4" y1="149" x2="316" y2="149" stroke="#E2D6C6" stroke-width="1.4" />
+      </g>
+    </svg>
+  )}
+
+  {kind === 'delegation' && (
+    <svg viewBox="0 0 320 200" role="img" aria-label="سلّم التفويض بأربع درجات: التنقيح ثم التحويل ثم توليد البدائل ثم الابتكار من فراغ، وجودة المخرج ترتفع كلما زادت المادة التي تعطيها">
+      <title>سلّم التفويض للأداة</title>
+      <g font-family="Readex, sans-serif" font-size="12" fill="#241E1A">
+        {[
+          ['تنقيح', 'مأمون', '#E4EEE1', '#3A6B33', 0],
+          ['تحويل', 'عالٍ', '#DFEDEB', '#14655F', 1],
+          ['توليد بدائل', 'جيد', '#FAEDD2', '#85600C', 2],
+          ['ابتكار من فراغ', 'ضعيف', '#F8E3E1', '#9C3F3C', 3],
+        ].map(([t, q, bg, ink, i]) => (
+          <>
+            <rect x={12 + Number(i) * 8} y={8 + Number(i) * 46} width={284 - Number(i) * 16} height="38" rx="9" fill={String(bg)} />
+            <text x={26 + Number(i) * 8} y={32 + Number(i) * 46} font-weight="600" fill={String(ink)}>{t}</text>
+            <text x={284 - Number(i) * 8} y={32 + Number(i) * 46} text-anchor="end" font-size="11" fill="#5E5148">{q}</text>
+          </>
+        ))}
+        <text x="160" y="196" text-anchor="middle" font-size="10.5" fill="#5E5148">كلما نزلت زادت المادة التي تعطيها، وارتفعت جودة المخرج</text>
+      </g>
+    </svg>
+  )}
+
+  {kind === 'layers' && (
+    <svg viewBox="0 0 320 168" role="img" aria-label="ثلاث طبقات لقراءة أي حالة: الموثق ثم القراءة ثم المبدأ القابل للنقل">
+      <title>طبقات قراءة الحالة</title>
+      <g font-family="Readex, sans-serif" font-size="12" fill="#241E1A">
+        <rect x="10" y="8" width="300" height="42" rx="9" fill="#E2ECF4" />
+        <rect x="10" y="8" width="5" height="42" fill="#1C5C86" />
+        <text x="28" y="27" font-weight="600" fill="#1C5C86">الموثق</text>
+        <text x="28" y="43" font-size="10.5" fill="#5E5148">ما صدر عن الجهة نفسها</text>
+
+        <rect x="10" y="60" width="300" height="42" rx="9" fill="none" stroke="#C9B8A3" stroke-width="1.5" stroke-dasharray="5 4" />
+        <text x="28" y="79" font-weight="600" fill="#5E5148">قراءتنا</text>
+        <text x="28" y="95" font-size="10.5" fill="#5E5148">تفسير قد يكون خاطئا</text>
+
+        <path d="M10 121 H292 L310 139 V154 H10 Z" fill="#EDE6F3" />
+        <text x="28" y="139" font-weight="600" fill="#5B4A80">المبدأ الذي ينتقل إليك</text>
+        <text x="28" y="152" font-size="10.5" fill="#5E5148">يبقى صالحا لو تغيّرت الحالة كلها</text>
       </g>
     </svg>
   )}

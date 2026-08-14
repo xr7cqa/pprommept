@@ -1,0 +1,114 @@
+---
+/**
+ * وسم نوع المادة.
+ * بعد أن تجاوز الموقع مئتي صفحة صار لا بد أن يعرف الطالب بنظرة واحدة
+ * هل ما أمامه درس أساسي يجب أن يمر به، أم مادة يفتحها وقت الحاجة.
+ * الأنواع الستة تختلف في اللون والشكل معا، لا في اللون وحده.
+ */
+interface Props {
+  kind: 'core' | 'apply' | 'case' | 'reference' | 'template' | 'prompt';
+  /** يظهر بلا خلفية داخل البطاقات المزدحمة */
+  quiet?: boolean;
+}
+const { kind, quiet = false } = Astro.props;
+
+const meta: Record<Props['kind'], { label: string; hint: string }> = {
+  core: { label: 'درس أساسي', hint: 'يدخل في حساب تقدمك' },
+  apply: { label: 'تطبيق', hint: 'تخرج منه بمخرج تملكه' },
+  case: { label: 'دراسة حالة', hint: 'اختيارية' },
+  reference: { label: 'مرجع اختياري', hint: 'يُفتح وقت الحاجة' },
+  template: { label: 'قالب', hint: 'تملؤه بنفسك' },
+  prompt: { label: 'برومبت', hint: 'تنسخه إلى الأداة' },
+};
+const m = meta[kind];
+---
+
+<span class={`kind kind--${kind}${quiet ? ' kind--quiet' : ''}`} title={m.hint}>{m.label}</span>
+
+<style>
+  .kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--f-ui);
+    font-size: var(--t-sm);
+    font-weight: 600;
+    line-height: 1.3;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .kind::before {
+    content: '';
+    inline-size: 7px;
+    block-size: 7px;
+    flex: 0 0 auto;
+  }
+
+  /* الأساسي: قرص مصمت — أثقل الأشكال، وهو الوحيد الإلزامي */
+  .kind--core {
+    background: var(--s2-bg);
+    color: var(--s2-ink);
+  }
+  .kind--core::before {
+    background: currentColor;
+    border-radius: 50%;
+  }
+
+  /* التطبيق: مربع — يشير إلى مخرج ملموس */
+  .kind--apply {
+    background: var(--s7-bg);
+    color: var(--s7-ink);
+  }
+  .kind--apply::before {
+    background: currentColor;
+  }
+
+  /* الحالة: مثلث */
+  .kind--case {
+    background: var(--s5-bg);
+    color: var(--s5-ink);
+  }
+  .kind--case::before {
+    inline-size: 0;
+    block-size: 0;
+    border-inline: 4px solid transparent;
+    border-block-end: 7px solid currentColor;
+  }
+
+  /* المرجع: حلقة مفرغة — أخف الأشكال لأنه أقلها إلزاما */
+  .kind--reference {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+  }
+  .kind--reference::before {
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+  }
+
+  /* القالب: مربع مفرغ */
+  .kind--template {
+    background: var(--s3-bg);
+    color: var(--s3-ink);
+  }
+  .kind--template::before {
+    border: 1.5px solid currentColor;
+  }
+
+  /* البرومبت: معيّن، وهو شكل بطاقة البرومبت في الموقع */
+  .kind--prompt {
+    background: var(--s4-bg);
+    color: var(--s4-ink);
+  }
+  .kind--prompt::before {
+    background: currentColor;
+    transform: rotate(45deg);
+  }
+
+  .kind--quiet {
+    background: transparent;
+    padding-inline: 0;
+  }
+</style>

@@ -13,8 +13,11 @@ const STEPS = [
   ['فحص الملفات الممنوعة', 'node', ['scripts/check-forbidden.mjs']],
   ['فحص الروابط الداخلية', 'node', ['scripts/check-links.mjs']],
   ['فحص الروابط الخارجية', 'node', ['scripts/check-external.mjs']],
+  ['فحص مكتبة البرومبتات', 'node', ['scripts/check-prompts.mjs']],
   ['فحص الأصول', 'node', ['scripts/check-assets.mjs']],
   ['اختبارات الواجهة', 'node', ['scripts/test-ui.mjs']],
+  ['اختبارات القوالب التفاعلية', 'node', ['scripts/test-templates.mjs']],
+  ['اختبار المقدمة', 'node', ['scripts/test-intro.mjs']],
   ['اختبارات الوصول', 'node', ['scripts/test-a11y.mjs']],
 ];
 

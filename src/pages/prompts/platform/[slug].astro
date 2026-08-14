@@ -1,0 +1,82 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import { routes } from '../../../lib/url';
+import { PLATFORM_SLUG, PLATFORM_NOTE, TASK_SLUG, toneFor } from '../../../lib/prompt-groups';
+
+export async function getStaticPaths() {
+  const items = await getCollection('prompts');
+  const names = Object.keys(PLATFORM_SLUG);
+  return names
+    .map((name, i) => ({
+      name,
+      slug: PLATFORM_SLUG[name] as string,
+      tone: toneFor(i),
+      list: items
+        .filter((p) => p.data.platform === name)
+        .sort((a, b) => a.data.order - b.data.order),
+    }))
+    .filter((g) => g.list.length > 0)
+    .map((g) => ({
+      params: { slug: g.slug },
+      props: {
+        name: g.name,
+        tone: g.tone,
+        rows: g.list.map((p) => ({
+          id: p.id,
+          title: p.data.title,
+          when: p.data.when,
+          task: p.data.task,
+          href: routes.prompt(p.id),
+        })),
+      },
+    }));
+}
+
+const { name, tone, rows } = Astro.props;
+const note = PLATFORM_NOTE[name] ?? '';
+
+/** البرومبتات مجمّعة بالمهمة داخل صفحة المنصة، فيسهل المسح */
+const byTask = Object.keys(TASK_SLUG)
+  .map((t) => ({ task: t, list: rows.filter((r) => r.task === t) }))
+  .filter((g) => g.list.length > 0);
+---
+
+<Base title={`برومبتات ${name}`} description={`برومبتات مكتوبة لمنطق ${name}: ${note}`}>
+  <div class="page-hero" style={`background:var(--${tone}-bg)`}>
+    <div class="wrap">
+      <p class="eyebrow" style={`color:var(--${tone}-ink)`}>
+        <a href={routes.prompts()} style={`color:var(--${tone}-ink);text-decoration:none`}
+          >مكتبة البرومبتات</a
+        >
+      </p>
+      <h1>برومبتات {name}</h1>
+      <p class="lead">{note}</p>
+      <p class="small muted" style="margin-top:var(--sp-4)">
+        {rows.length} برومبتا موزعة على {byTask.length} مهمات
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    {
+      byTask.map((g) => (
+        <section style="margin-bottom:var(--sp-7)">
+          <h2>{g.task}</h2>
+          <div class="grid grid-2" style="margin-top:var(--sp-4)">
+            {g.list.map((p) => (
+              <a class="lesson-card" href={p.href} style="box-shadow:none">
+                <span class="t">{p.title}</span>
+                <span class="o">{p.when}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+
+    <p style="margin-top:var(--sp-6)">
+      <a class="btn btn--quiet" href={routes.prompts()}>عد إلى مكتبة البرومبتات</a>
+    </p>
+  </div>
+</Base>

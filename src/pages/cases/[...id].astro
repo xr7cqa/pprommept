@@ -1,0 +1,74 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import * as C from '../../components/content';
+import { routes } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.data.order);
+  return items.map((entry, i) => ({
+    params: { id: entry.id },
+    props: { entry, prev: i > 0 ? items[i - 1] : null, next: items[i + 1] ?? null },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+
+const lessons = await getCollection('course');
+const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
+---
+
+<Base title={d.title} description={d.summary}>
+  <div class="page-hero" style={`background:var(--${d.tone}-bg)`}>
+    <div class="wrap">
+      <p class="eyebrow" style={`color:var(--${d.tone}-ink)`}>
+        <a href={routes.cases()} style={`color:var(--${d.tone}-ink);text-decoration:none`}>دراسات الحالة</a>
+      </p>
+      <h1>{d.title}</h1>
+      <p class="lead">{d.summary}</p>
+      <dl class="grid grid-2" style="margin-top:var(--sp-5);max-width:44rem">
+        <div style="background:rgba(255,255,255,.55);border-radius:var(--r-md);padding:var(--sp-4)">
+          <dt class="eyebrow" style={`color:var(--${d.tone}-ink)`}>المجال</dt>
+          <dd style="margin:0;font-size:var(--t-base)">{d.field}</dd>
+        </div>
+        <div style="background:rgba(255,255,255,.55);border-radius:var(--r-md);padding:var(--sp-4)">
+          <dt class="eyebrow" style={`color:var(--${d.tone}-ink)`}>أقوى دليل في الحالة</dt>
+          <dd style="margin:0;font-size:var(--t-base)">{d.evidence}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <article class="lesson-body">
+      <Content components={C} />
+
+      {concept && (
+        <p style="margin-top:var(--sp-6)">
+          <a class="btn btn--quiet" href={routes.lesson(concept.id)}>
+            الدرس الذي يشرح المفهوم: {concept.data.title}
+          </a>
+        </p>
+      )}
+
+      <nav class="prevnext" aria-label="التنقل بين الحالات">
+        {prev ? (
+          <a href={routes.case(prev.id)} rel="prev">
+            <span class="l">السابق</span><span class="t">{prev.data.title}</span>
+          </a>
+        ) : (
+          <a href={routes.cases()}><span class="l">عودة</span><span class="t">دراسات الحالة</span></a>
+        )}
+        {next ? (
+          <a href={routes.case(next.id)} rel="next" class="next">
+            <span class="l">التالي</span><span class="t">{next.data.title}</span>
+          </a>
+        ) : (
+          <a href={routes.cases()} class="next"><span class="l">عودة</span><span class="t">دراسات الحالة</span></a>
+        )}
+      </nav>
+    </article>
+  </div>
+</Base>

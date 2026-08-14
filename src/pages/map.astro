@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { STAGES } from '../lib/stages';
 import { routes } from '../lib/url';
+import Kind from '../components/Kind.astro';
 
 const lessons = (await getCollection('course')).sort(
   (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
@@ -43,10 +44,19 @@ const totalMinutes = lessons.reduce((n, l) => n + l.data.minutes, 0);
                 المرحلة {st.n}
               </p>
               <h2 style="margin-bottom:var(--sp-2)">{st.title}</h2>
-              <p class="muted" style="margin-bottom:var(--sp-3)">{st.promise}</p>
-              <p style="margin:0;font-family:var(--f-ui);font-size:var(--t-sm)">
-                <strong style={`color:var(--${st.tone}-ink)`}>مخرج المرحلة</strong> {st.outcome}
+              <p style="margin:0 0 var(--sp-2);font-family:var(--f-ui);font-size:var(--t-sm)">
+                <strong style={`color:var(--${st.tone}-ink)`}>ما تتعلمه</strong> {st.promise}
               </p>
+              <p style="margin:0 0 var(--sp-3);font-family:var(--f-ui);font-size:var(--t-sm)">
+                <strong style={`color:var(--${st.tone}-ink)`}>ما تطبّقه</strong> {st.outcome}
+              </p>
+              {items[0] && (
+                <p style="margin:0">
+                  <a class="btn btn--sm" href={routes.lesson(items[0].id)}>
+                    ابدأ المرحلة من «{items[0].data.title}»
+                  </a>
+                </p>
+              )}
             </div>
             <div class="grid grid-2">
               {items.map((l, i) => (
@@ -59,9 +69,7 @@ const totalMinutes = lessons.reduce((n, l) => n + l.data.minutes, 0);
                   </span>
                   <span class="o">{l.data.outcome}</span>
                   <span class="row">
-                    <span class={l.data.core ? 'badge badge--core' : 'badge badge--opt'}>
-                      {l.data.core ? 'أساسي' : 'اختياري'}
-                    </span>
+                    <Kind kind={l.data.core ? 'core' : 'reference'} />
                     <span>{l.data.minutes} دقائق</span>
                     <span data-done-flag hidden class="badge badge--done">أنجزته</span>
                   </span>
