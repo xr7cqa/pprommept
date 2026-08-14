@@ -104,4 +104,31 @@ const glossary = defineCollection({
   }),
 });
 
-export const collections = { course, platforms, prompts, apps, glossary };
+/**
+ * دراسات الحالة — مرجع يُفتح بحرية ولا يدخل في نسبة التقدم.
+ * كل حالة تُعرض على ثلاث طبقات مفصولة: الموثق، ثم التفسير، ثم المبدأ القابل للنقل.
+ * الفصل مفروض في البنية لا في نية الكاتب، حتى لا يختلط الرأي بالحقيقة.
+ */
+const cases = defineCollection({
+  loader: glob({ base: './src/content/cases', pattern: '**/*.mdx' }),
+  schema: z.object({
+    title: z.string(),
+    order: z.number().int(),
+    /** جملة تصف الحالة في الفهرس والبحث */
+    summary: z.string(),
+    /** صاحب الحالة كما يُعرف: قناة أو علامة أو نمط عمل */
+    subject: z.string(),
+    /** المجال حتى يجد الطالب الحالة الأقرب إليه */
+    field: z.string(),
+    /** المبدأ القابل للنقل في جملة واحدة — هو سبب وجود الحالة */
+    principle: z.string(),
+    /** مستوى أقوى دليل في الحالة */
+    evidence: z.enum(['رسمي', 'متخصص', 'ملاحظة ممارسة']),
+    tone: z.enum(['s1', 's2', 's3', 's4', 's5', 's6', 's7']),
+    /** الدرس الذي يشرح المفهوم */
+    concept: z.string().optional(),
+    keywords: z.array(z.string()).default([]),
+  }),
+});
+
+export const collections = { course, platforms, prompts, apps, glossary, cases };

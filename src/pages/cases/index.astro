@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { routes } from '../../lib/url';
+
+const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base
+  title="دراسات الحالة"
+  description="حالات حقيقية مفصولة إلى ثلاث طبقات: ما هو موثق، وما هو تفسير، والمبدأ الذي ينتقل إلى عملك"
+>
+  <section class="page-hero" style="background:var(--s5-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s5-ink)">مكتبة مرجعية</p>
+      <h1>دراسات الحالة</h1>
+      <p class="lead">
+        كل حالة هنا مفصولة إلى ثلاث طبقات: ما هو موثق، وقراءتنا له، والمبدأ الذي ينتقل إلى
+        عملك. الطبقة الثانية تفسير قد يكون خاطئا، والثالثة هي سبب وجود الحالة أصلا
+      </p>
+      <p class="small muted" style="margin-top:var(--sp-4)">
+        قراءة هذه الصفحات لا تدخل في حساب تقدمك
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <div class="grid grid-2">
+      {
+        items.map((c) => (
+          <a
+            class="stage-card"
+            style={`background:var(--${c.data.tone}-bg);align-items:flex-start`}
+            href={routes.case(c.id)}
+          >
+            <span>
+              <span class="t" style={`color:var(--${c.data.tone}-ink)`}>{c.data.title}</span>
+              <span class="d" style="display:block;margin-top:4px">{c.data.summary}</span>
+              <span class="meta">{c.data.field} · دليلها: {c.data.evidence}</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="box-warn" style="margin-top:var(--sp-7)">
+      <p class="box-h">اقرأها لتأخذ المبدأ لا لتقلّد الشكل</p>
+      <p style="margin-bottom:0">
+        أكثر ما يُفسد الاستفادة من دراسات الحالة هو نقل الشكل: نفس نوع المقطع، ونفس نبرة
+        المزاح، ونفس التنسيق. الشكل مرتبط بجمهور تلك الحالة وظرفها ووقتها، والمبدأ وحده هو
+        ما ينتقل. ولهذا وُضع المبدأ في كل صفحة في صندوق منفصل تحت العنوان نفسه
+      </p>
+    </div>
+  </div>
+</Base>

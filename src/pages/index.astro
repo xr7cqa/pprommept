@@ -14,6 +14,7 @@ const coreCount = lessons.filter((l) => l.data.core).length;
 const platforms = await getCollection('platforms');
 const prompts = await getCollection('prompts');
 const apps = await getCollection('apps');
+const cases = await getCollection('cases');
 
 /** جدول خفيف يقرأه المتصفح لتحديث نسب المسارات وبطاقة المتابعة */
 const stageTable = STAGES.map((st) => ({
@@ -176,6 +177,13 @@ const outputs = [
         <span>
           <span class="t">القوالب والتطبيقات</span>
           <span class="d" style="display:block">{apps.length} قوالب تملؤها فتخرج بمخرج حقيقي</span>
+        </span>
+      </a>
+      <a class="stage-card" style="background:var(--s7-bg)" href={routes.cases()}>
+        <span class="n" style="color:var(--s7-ink)"><Icon name="grid" size={26} /></span>
+        <span>
+          <span class="t">دراسات الحالة</span>
+          <span class="d" style="display:block">{cases.length} حالة مفصولة إلى موثق وتفسير ومبدأ</span>
         </span>
       </a>
     </div>

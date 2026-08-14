@@ -1,0 +1,99 @@
+---
+/**
+ * طبقة داخل دراسة حالة.
+ * الفصل بين الموثق والتفسير والمبدأ مفروض بالبنية لا بنية الكاتب،
+ * حتى لا يُقرأ الرأي على أنه حقيقة. لكل طبقة شكل مختلف يميّزها بصريا.
+ */
+interface Props {
+  kind: 'documented' | 'reading' | 'principle';
+  title?: string;
+}
+const { kind, title } = Astro.props;
+
+const meta: Record<Props['kind'], { label: string; note: string }> = {
+  documented: {
+    label: 'الموثق',
+    note: 'ما صدر عن الجهة نفسها أو نقلته تغطية مهنية متعددة',
+  },
+  reading: {
+    label: 'قراءتنا',
+    note: 'تفسير، لا حقيقة. قد يكون خاطئا',
+  },
+  principle: {
+    label: 'المبدأ الذي ينتقل إليك',
+    note: 'ما يبقى صالحا لو تغيّرت المنصة والحالة كلها',
+  },
+};
+const m = meta[kind];
+const heading = title ?? m.label;
+---
+
+<section class={`layer layer--${kind}`}>
+  <p class="layer-h">
+    <span class="layer-tag">{heading}</span>
+    <span class="layer-note">{m.note}</span>
+  </p>
+  <div class="layer-body"><slot /></div>
+</section>
+
+<style>
+  .layer {
+    margin: var(--sp-5) 0;
+    border-radius: var(--r-md);
+    padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  }
+
+  .layer-h {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-2) var(--sp-3);
+    margin: 0 0 var(--sp-3);
+  }
+
+  .layer-tag {
+    font-family: var(--f-ui);
+    font-size: var(--t-sm);
+    font-weight: 600;
+  }
+
+  .layer-note {
+    font-family: var(--f-ui);
+    font-size: var(--t-sm);
+    color: var(--ink-soft);
+  }
+
+  .layer-body :global(> :last-child) {
+    margin-bottom: 0;
+  }
+
+  /* الموثق: خط سميك مصمت — أثقل الطبقات بصريا */
+  .layer--documented {
+    background: var(--s4-bg);
+    border-inline-start: 5px solid var(--s4-ink);
+  }
+  .layer--documented .layer-tag {
+    color: var(--s4-ink);
+  }
+
+  /* القراءة: حد متقطع — يشير إلى أنها غير مثبتة */
+  .layer--reading {
+    background: transparent;
+    border: 1.5px dashed var(--line);
+  }
+  .layer--reading .layer-tag {
+    color: var(--ink-soft);
+  }
+
+  /* المبدأ: زاوية مقطوعة — الشكل الذي يميّز الخلاصة في هذا الموقع */
+  .layer--principle {
+    background: var(--s6-bg);
+    clip-path: polygon(0 0, calc(100% - 1.1rem) 0, 100% 1.1rem, 100% 100%, 0 100%);
+  }
+  .layer--principle .layer-tag {
+    color: var(--s6-ink);
+  }
+  .layer--principle .layer-body {
+    font-family: var(--f-ui);
+  }
+</style>
