@@ -264,6 +264,15 @@ const toc = headings.filter((h) => h.depth === 2);
 
     let ticking = false;
     let lastSaved = 0;
+    let trailing: number | undefined;
+
+    function savePos() {
+      const y = Math.round(window.scrollY);
+      update((s) => {
+        if (y > 320) s.pos[id] = y;
+        else delete s.pos[id];
+      });
+    }
 
     function onScroll() {
       if (ticking) return;
@@ -291,15 +300,20 @@ const toc = headings.filter((h) => h.depth === 2);
           });
         }
 
-        /* موضع القراءة يُحفظ بتباعد حتى لا نثقل التخزين */
+        /* موضع القراءة يُحفظ بتباعد حتى لا نثقل التخزين، ومعه حفظ لاحق
+           يضمن أن آخر موضع يُكتب دائما ولو توقف التمرير داخل فترة التباعد */
         const now = Date.now();
-        if (storageAvailable() && now - lastSaved > 1500) {
-          lastSaved = now;
-          const y = Math.round(window.scrollY);
-          update((s) => {
-            if (y > 320) s.pos[id] = y;
-            else delete s.pos[id];
-          });
+        if (storageAvailable()) {
+          if (now - lastSaved > 1500) {
+            lastSaved = now;
+            savePos();
+          } else {
+            window.clearTimeout(trailing);
+            trailing = window.setTimeout(() => {
+              lastSaved = Date.now();
+              savePos();
+            }, 600);
+          }
         }
 
         /* زر المحتويات العائم يظهر بعد مغادرة الترويسة */
@@ -310,6 +324,18 @@ const toc = headings.filter((h) => h.depth === 2);
 
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
+
+    /* حفظ فوري بلا تباعد عند مغادرة الصفحة أو إخفائها.
+       بلا هذا يخسر موضعه من يقرأ ثم يغادر بسرعة، لأن الحفظ أثناء التمرير متباعد */
+    function saveNow() {
+      if (!storageAvailable()) return;
+      window.clearTimeout(trailing);
+      savePos();
+    }
+    window.addEventListener('pagehide', saveNow);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') saveNow();
+    });
 
     /* ── استئناف القراءة من الموضع المحفوظ، باختيار المتعلم لا قسرا ── */
     const savedY = read().pos[id] ?? 0;
@@ -323,7 +349,9 @@ const toc = headings.filter((h) => h.depth === 2);
       document.body.appendChild(chip);
       const hide = () => chip.remove();
       chip.querySelector('[data-resume-go]')?.addEventListener('click', () => {
-        window.scrollTo({ top: savedY, behavior: 'smooth' });
+        // من يطلب تقليل الحركة ينتقل مباشرة بلا انزلاق
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: savedY, behavior: reduced ? 'auto' : 'smooth' });
         hide();
       });
       chip.querySelector('[data-resume-close]')?.addEventListener('click', hide);

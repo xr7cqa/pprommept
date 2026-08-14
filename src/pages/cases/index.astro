@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Diagram from '../../components/content/Diagram.astro';
 import { routes } from '../../lib/url';
 
 const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.data.order);
@@ -25,6 +26,10 @@ const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.dat
   </section>
 
   <div class="wrap" style="margin-top:var(--sp-6)">
+    <div style="max-width:34rem;margin-bottom:var(--sp-6)">
+      <Diagram kind="layers" />
+    </div>
+
     <div class="grid grid-2">
       {
         items.map((c) => (

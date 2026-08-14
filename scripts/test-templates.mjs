@@ -1,6 +1,12 @@
+/**
+ * اختبارات القوالب التفاعلية: الحفظ المحلي، والاسترجاع، والمسح بتأكيد،
+ * وترقية بنية التخزين بلا فقدان تقدم المتعلم.
+ */
 import puppeteer from 'puppeteer';
-import { SITE, CHROME, ok, fail, info } from './config.mjs';
+import { withServer } from './serve.mjs';
+import { SITE, CHROME, ok, fail } from './config.mjs';
 
+async function main() {
 const b = await puppeteer.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
 const p = await b.newPage();
 await p.setViewport({ width: 390, height: 844 });
@@ -72,4 +78,7 @@ up2.v === 3 && up2.done['x-lesson'] === 5
 
 await b.close();
 console.log(bad === 0 ? '\nكل فحوص القوالب نجحت' : `\n${bad} إخفاقا`);
-process.exit(bad ? 1 : 0);
+return bad ? 1 : 0;
+}
+
+process.exit(await withServer(main));

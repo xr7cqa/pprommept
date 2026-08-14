@@ -63,23 +63,18 @@ const rows = items.map((p) => ({
 
     <p class="small muted" id="count" aria-live="polite"></p>
 
-    <div class="grid grid-2" id="list" style="margin-top:var(--sp-3)">
+    <div class="grid grid-2 lazy-list" id="list" style="margin-top:var(--sp-3)">
       {
         rows.map((p) => (
           <a
             class="lesson-card"
             href={p.href}
-            data-platform={p.platform}
-            data-task={p.task}
-            data-text={`${p.title} ${p.when} ${p.task} ${p.platform}`}
-            style="background:var(--s4-bg);box-shadow:none"
           >
             <span class="t">{p.title}</span>
             <span class="o">{p.when}</span>
             <span class="row">
               <span class="chip">{p.platform}</span>
               <span class="chip">{p.task}</span>
-              <span class="badge badge--done" data-fav hidden>مفضل</span>
             </span>
           </a>
         ))
@@ -87,6 +82,17 @@ const rows = items.map((p) => ({
     </div>
     <p class="empty" id="empty" hidden>لا يوجد برومبت يطابق هذا الاختيار. جرّب اختيارا أوسع</p>
   </div>
+
+  <style>
+    /* المكتبة طويلة، فنترك المتصفح يؤجل رسم ما هو خارج الشاشة.
+       البطاقات تبقى في الصفحة فيعمل التصفية والبحث داخل الصفحة وبلا جافاسكربت. */
+    .lazy-list > .lesson-card {
+      background: var(--s4-bg);
+      box-shadow: none;
+      content-visibility: auto;
+      contain-intrinsic-size: auto 132px;
+    }
+  </style>
 </Base>
 
 <script>
@@ -112,12 +118,28 @@ const rows = items.map((p) => ({
       .trim();
   }
 
+  /* نص البحث يُبنى مرة من محتوى البطاقة بدل تكراره في سمة داخل الصفحة،
+     فيخف حجم الصفحة المرسل وتبقى التصفية فورية */
+  const searchText = new WeakMap<HTMLElement, string>();
+  /* المنصة والمهمة معروضتان في شريحتي البطاقة، فتُقرآن منهما بدل تكرارهما
+     في سمات داخل الصفحة. هذا يخفف الصفحة المرسلة ولا يغيّر سلوك التصفية */
+  const meta = new WeakMap<HTMLElement, { platform: string; task: string }>();
+  for (const c of cards) {
+    searchText.set(c, norm(c.textContent ?? ''));
+    const chips = c.querySelectorAll<HTMLElement>('.row > .chip');
+    meta.set(c, {
+      platform: chips[0]?.textContent?.trim() ?? '',
+      task: chips[1]?.textContent?.trim() ?? '',
+    });
+  }
+
   function apply() {
     let n = 0;
     for (const c of cards) {
-      const okP = !state.platform || c.dataset.platform === state.platform;
-      const okT = !state.task || c.dataset.task === state.task;
-      const okQ = !state.text || norm(c.dataset.text ?? '').includes(state.text);
+      const m = meta.get(c);
+      const okP = !state.platform || m?.platform === state.platform;
+      const okT = !state.task || m?.task === state.task;
+      const okQ = !state.text || (searchText.get(c) ?? '').includes(state.text);
       const show = okP && okT && okQ;
       c.hidden = !show;
       if (show) n += 1;
@@ -146,8 +168,10 @@ const rows = items.map((p) => ({
   cards.forEach((c) => {
     const id = c.getAttribute('href')?.split('/').filter(Boolean).pop() ?? '';
     if (s.favPrompts[id]) {
-      const f = c.querySelector<HTMLElement>('[data-fav]');
-      if (f) f.hidden = false;
+      const b = document.createElement('span');
+      b.className = 'badge badge--done';
+      b.textContent = 'مفضل';
+      c.querySelector('.row')?.appendChild(b);
     }
   });
 

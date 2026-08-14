@@ -478,8 +478,25 @@ async function main() {
     await page.goto(SITE + 'course/28-the-hook/', { waitUntil: 'networkidle0' });
     await page.waitForSelector('.resume-chip', { timeout: 3000 });
     await page.click('[data-resume-go]');
-    await new Promise((r) => setTimeout(r, 700));
-    const y = await page.evaluate(() => window.scrollY);
+    // الانتقال سلس، فننتظر استقرار الموضع بدل مهلة ثابتة تقرأ منتصف الحركة.
+    // العينة كل 120ms لا كل إطار، لأن تباطؤ الحركة في بدايتها يجعل إطارين
+    // متتاليين يعطيان نفس العدد الصحيح فيُقرأ ذلك استقرارا قبل أوانه.
+    const y = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          let last = -1;
+          let stable = 0;
+          const started = Date.now();
+          const tick = () => {
+            const cur = Math.round(window.scrollY);
+            stable = cur === last ? stable + 1 : 0;
+            last = cur;
+            if (stable >= 3 || Date.now() - started > 5000) resolve(cur);
+            else setTimeout(tick, 120);
+          };
+          setTimeout(tick, 120);
+        }),
+    );
     assert(y > 1000, `لم ينتقل إلى الموضع المحفوظ: ${y}`);
     await page.close();
   });
