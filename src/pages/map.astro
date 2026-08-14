@@ -1,0 +1,107 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { STAGES } from '../lib/stages';
+import { routes } from '../lib/url';
+
+const lessons = (await getCollection('course')).sort(
+  (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+);
+const coreIds = lessons.filter((l) => l.data.core).map((l) => l.id);
+const totalMinutes = lessons.reduce((n, l) => n + l.data.minutes, 0);
+---
+
+<Base
+  title="خريطة المسار"
+  description="كل مراحل الكورس ودروسه ومخرجاتها ووقت قراءتها، مع علامة على ما أنجزته"
+>
+  <section class="page-hero" style="background:var(--s2-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s2-ink)">خريطة المسار</p>
+      <h1>كل درس، ومخرجه، ووقته</h1>
+      <p class="lead">
+        {lessons.length} درسا موزعة على سبع مراحل، منها {coreIds.length} درسا أساسيا يدخل في
+        حساب التقدم. وقت القراءة الكامل نحو {Math.round(totalMinutes / 60)} ساعات، والتطبيق يأخذ أكثر
+      </p>
+      <div data-needs-storage hidden style="margin-top:var(--sp-5);max-width:26rem">
+        <div class="progress"><i data-progress-bar style="width:0%"></i></div>
+        <p class="small muted" style="margin:var(--sp-2) 0 0" data-progress-text></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    {
+      STAGES.map((st) => {
+        const items = lessons.filter((l) => l.data.stage === st.n);
+        return (
+          <section id={`stage-${st.slug}`} style="margin-bottom:var(--sp-8);scroll-margin-top:72px">
+            <div
+              style={`background:var(--${st.tone}-bg);border-radius:var(--r-lg);padding:var(--sp-5);margin-bottom:var(--sp-4)`}
+            >
+              <p class="eyebrow" style={`color:var(--${st.tone}-ink);margin-bottom:var(--sp-1)`}>
+                المرحلة {st.n}
+              </p>
+              <h2 style="margin-bottom:var(--sp-2)">{st.title}</h2>
+              <p class="muted" style="margin-bottom:var(--sp-3)">{st.promise}</p>
+              <p style="margin:0;font-family:var(--f-ui);font-size:var(--t-sm)">
+                <strong style={`color:var(--${st.tone}-ink)`}>مخرج المرحلة</strong> {st.outcome}
+              </p>
+            </div>
+            <div class="grid grid-2">
+              {items.map((l, i) => (
+                <a class="lesson-card" href={routes.lesson(l.id)} data-lesson-id={l.id}>
+                  <span class="t">
+                    <span class="muted" style="font-family:var(--f-ui);font-size:var(--t-xs)">
+                      {st.n}.{i + 1}
+                    </span>{' '}
+                    {l.data.title}
+                  </span>
+                  <span class="o">{l.data.outcome}</span>
+                  <span class="row">
+                    <span class={l.data.core ? 'badge badge--core' : 'badge badge--opt'}>
+                      {l.data.core ? 'أساسي' : 'اختياري'}
+                    </span>
+                    <span>{l.data.minutes} دقائق</span>
+                    <span data-done-flag hidden class="badge badge--done">أنجزته</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        );
+      })
+    }
+  </div>
+</Base>
+
+<script define:vars={{ coreIds }}>
+  // معرّفات الدروس الأساسية تأتي من البناء حتى تُحسب النسبة من المسار الأساسي وحده
+  window.__coreIds = coreIds;
+</script>
+
+<script>
+  import { read, ratio, storageAvailable } from '../lib/progress';
+
+  const coreIds: string[] = (window as unknown as { __coreIds: string[] }).__coreIds ?? [];
+  const s = read();
+
+  if (storageAvailable()) {
+    const box = document.querySelector<HTMLElement>('[data-needs-storage]');
+    if (box) box.hidden = false;
+    const r = ratio(s.done, coreIds);
+    const bar = document.querySelector<HTMLElement>('[data-progress-bar]');
+    const txt = document.querySelector<HTMLElement>('[data-progress-text]');
+    if (bar) bar.style.width = `${Math.round(r * 100)}%`;
+    const doneCount = coreIds.filter((id) => s.done[id]).length;
+    if (txt) txt.innerHTML = `أنجزت <span class="num">${doneCount}</span> من <span class="num">${coreIds.length}</span> درسا أساسيا · <span class="num">${Math.round(r * 100)}%</span>`;
+  }
+
+  document.querySelectorAll<HTMLElement>('.lesson-card[data-lesson-id]').forEach((card) => {
+    const id = card.dataset.lessonId!;
+    if (s.done[id]) {
+      const flag = card.querySelector<HTMLElement>('[data-done-flag]');
+      if (flag) flag.hidden = false;
+    }
+  });
+</script>

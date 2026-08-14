@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { routes } from '../../lib/url';
+
+const items = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base
+  title="القوالب والتطبيقات"
+  description="قوالب تملؤها فتخرج بمخرج حقيقي: وثيقة الجمهور، وجملة التموضع، ودليل الصوت، وبنك الأفكار، ولوحة القياس"
+>
+  <section class="page-hero" style="background:var(--s5-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s5-ink)">مساحة التطبيق</p>
+      <h1>القوالب</h1>
+      <p class="lead">
+        هنا يتحول ما قرأته إلى ملفات تملكها. كل قالب يُملأ في مكان واحد ثم تنسخه إلى ملاحظاتك
+        أو ملفك، ونحفظ لك علامة أنك بدأته
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <div class="grid grid-2">
+      {
+        items.map((a) => (
+          <a class="stage-card" style={`background:var(--${a.data.tone}-bg)`} href={routes.app(a.id)}>
+            <span>
+              <span class="t" style={`color:var(--${a.data.tone}-ink)`}>{a.data.title}</span>
+              <span class="d" style="display:block;margin-top:4px">{a.data.summary}</span>
+              <span class="meta">تخرج بـ: {a.data.outcome}</span>
+              <span class="badge badge--done" data-app-flag={a.id} hidden style="margin-top:var(--sp-2);display:none">بدأته</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { read } from '../../lib/progress';
+  const s = read();
+  document.querySelectorAll<HTMLElement>('[data-app-flag]').forEach((el) => {
+    if (s.apps[el.dataset.appFlag!]) {
+      el.hidden = false;
+      el.style.display = 'inline-block';
+    }
+  });
+</script>

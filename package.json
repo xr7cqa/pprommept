@@ -1,0 +1,37 @@
+{
+  "name": "prompts-arabic-course-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "منصة تعلم عربية للويب — صناعة المحتوى بالذكاء الاصطناعي",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "node scripts/serve.mjs",
+    "typecheck": "astro check --minimumSeverity error",
+    "lint": "node scripts/lint.mjs",
+    "check:links": "node scripts/check-links.mjs",
+    "check:external": "node scripts/check-external.mjs",
+    "check:forbidden": "node scripts/check-forbidden.mjs",
+    "check:assets": "node scripts/check-assets.mjs",
+    "test:ui": "node scripts/test-ui.mjs",
+    "test:a11y": "node scripts/test-a11y.mjs",
+    "shots": "node scripts/screenshots.mjs",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "qa": "node scripts/qa.mjs"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "7.0.5",
+    "@fontsource/alexandria": "5.3.0",
+    "@fontsource/noto-naskh-arabic": "5.3.0",
+    "@fontsource/readex-pro": "5.3.0",
+    "astro": "7.2.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@axe-core/puppeteer": "4.13.0",
+    "lighthouse": "13.4.1",
+    "puppeteer": "25.7.0",
+    "typescript": "6.0.3"
+  }
+}

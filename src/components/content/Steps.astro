@@ -1,0 +1,20 @@
+---
+/** خطوات تنفيذ بأرقام كبيرة بلا صناديق */
+interface Props {
+  items: { t: string; d: string }[];
+}
+const { items } = Astro.props;
+---
+
+<ol class="flow">
+  {
+    items.map((it) => (
+      <li>
+        <div>
+          <strong>{it.t}</strong>
+          <span>{it.d}</span>
+        </div>
+      </li>
+    ))
+  }
+</ol>

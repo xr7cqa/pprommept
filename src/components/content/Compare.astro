@@ -1,0 +1,31 @@
+---
+/** مقارنة قبل وبعد بعمودين وشريط تشخيص */
+interface Props {
+  beforeTitle?: string;
+  afterTitle?: string;
+  before: string;
+  after: string;
+  diagnosis: string;
+}
+const {
+  beforeTitle = 'قبل',
+  afterTitle = 'بعد',
+  before,
+  after,
+  diagnosis,
+} = Astro.props;
+---
+
+<div class="box-compare">
+  <div class="compare">
+    <div class="c-before">
+      <p class="c-h">{beforeTitle}</p>
+      <p>{before}</p>
+    </div>
+    <div class="c-after">
+      <p class="c-h">{afterTitle}</p>
+      <p>{after}</p>
+    </div>
+  </div>
+  <p class="compare-note">{diagnosis}</p>
+</div>

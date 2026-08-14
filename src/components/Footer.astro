@@ -1,0 +1,17 @@
+---
+import { routes } from '../lib/url';
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <nav aria-label="روابط الموقع">
+      <a href={routes.dashboard()}>لوحتك</a>
+      <a href={routes.map()}>خريطة المسار</a>
+      <a href={routes.platforms()}>مكتبة المنصات</a>
+      <a href={routes.prompts()}>مكتبة البرومبتات</a>
+      <a href={routes.apps()}>القوالب</a>
+      <a href={routes.search()}>بحث</a>
+    </nav>
+    <p style="margin:0">تقدمك محفوظ داخل متصفحك أنت، ولا يُرسل إلى أي مكان</p>
+  </div>
+</footer>

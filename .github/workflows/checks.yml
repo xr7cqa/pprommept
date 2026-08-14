@@ -1,0 +1,67 @@
+name: فحوص طلبات الدمج
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SITE_ORIGIN: https://xr7cqa.github.io
+  SITE_BASE: /pprommept-/
+  PUPPETEER_SKIP_DOWNLOAD: '1'
+
+jobs:
+  checks:
+    name: بناء وفحص
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: تثبيت التبعيات
+        run: npm ci
+
+      - name: تثبيت متصفح الاختبارات
+        run: npx puppeteer browsers install chrome --path "$RUNNER_TEMP/chrome"
+
+      - name: تحديد مسار المتصفح
+        run: |
+          BIN=$(find "$RUNNER_TEMP/chrome" -type f -name chrome | head -n1)
+          echo "CHROME_PATH=$BIN" >> "$GITHUB_ENV"
+
+      - name: فحص الأنواع
+        run: npm run typecheck
+
+      - name: الفحص اللغوي
+        run: npm run lint
+
+      - name: فحص التباين
+        run: node scripts/check-contrast.mjs
+
+      - name: بناء الموقع
+        run: npm run build
+
+      - name: الملفات الممنوعة
+        run: npm run check:forbidden
+
+      - name: الروابط الداخلية
+        run: npm run check:links
+
+      - name: الروابط الخارجية
+        run: npm run check:external
+
+      - name: الأصول
+        run: npm run check:assets
+
+      - name: اختبارات الواجهة
+        run: npm run test:ui
+
+      - name: اختبارات الوصول
+        run: npm run test:a11y

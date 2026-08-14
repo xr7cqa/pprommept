@@ -1,0 +1,139 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import SupportCard from '../components/SupportCard.astro';
+import { STAGES } from '../lib/stages';
+import { routes } from '../lib/url';
+
+const lessons = (await getCollection('course')).sort(
+  (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+);
+const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order);
+const coreIds = lessons.filter((l) => l.data.core).map((l) => l.id);
+const stageRows = STAGES.map((s) => ({ n: s.n, t: s.title, tone: s.tone, out: s.outcome }));
+const lessonRows = lessons.map((l) => ({ id: l.id, s: l.data.stage, c: l.data.core }));
+---
+
+<Base
+  title="الإتمام"
+  description="ما صار عندك بعد الكورس، والخطوة الواحدة التي تفعلها الآن"
+>
+  <section class="page-hero" style="background:linear-gradient(180deg,var(--s1-bg),var(--paper))">
+    <div class="wrap">
+      <p class="eyebrow">النهاية</p>
+      <h1>وصلت</h1>
+      <p class="lead">
+        قبل أن تغلق الصفحة، ارجع إلى أول ورقة كتبت فيها ما تعرفه وما تريد أن تُعرف به. قارنها
+        بما عندك الآن. الفرق بين الورقتين هو الكورس كله
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <article class="lesson-body">
+      <h2 style="margin-top:0">ما صار عندك</h2>
+      <div id="owned" style="display:grid;gap:var(--sp-2)"></div>
+      <noscript>
+        <ul>
+          {STAGES.map((s) => <li><strong>{s.title}</strong> — {s.outcome}</li>)}
+        </ul>
+      </noscript>
+
+      <h2>خطوة واحدة الآن</h2>
+      <p>
+        لا تفتح ملفا جديدا ولا تعد ترتيب أعمدتك. خذ أول قطعة من قائمتك وانشرها اليوم. النشر
+        قبل الكمال ليس تهاونا، بل هو الطريقة الوحيدة لتعرف أي جزء من نظامك يعمل فعلا وأي جزء
+        بناه رأسك وحده
+      </p>
+
+      <div class="box-apply">
+        <p class="box-h">افعل هذا خلال اليوم</p>
+        <p style="margin-bottom:0">
+          اختر قطعة واحدة من أول خمس عشرة قطعة، راجعها مرة واحدة فقط بقائمة الفحص، ثم انشرها.
+          وبعد ثلاثة أيام افتح لوحة القياس واكتب رقما واحدا وسببا واحدا
+        </p>
+      </div>
+
+      <h2>وبعد الشهر الأول</h2>
+      <p>
+        الأشخاص الذين يستمرون ليسوا أكثرهم حماسا في الأسبوع الأول، بل من بنى نظاما يعمل وهو
+        متعب. لن ينتشر كل ما تنشره، ولا توجد طريقة تجعل ذلك يحدث. ما تملكه الآن أنك تعرف
+        لماذا نشرت هذه القطعة تحديدا، وما الذي ستغيّره إن لم تنجح
+      </p>
+
+      <p>
+        وإن عدت بعد شهر ووجدت أن مجالك تغيّر قليلا، فهذا ليس فشلا. اختيار المجال يتعدّل بعد
+        النشر الحقيقي، لأنك تكون قد رأيت ما يستجيب له الناس بدل أن تخمّنه
+      </p>
+
+      <SupportCard
+        heading="ونحن هنا"
+        text="إذا تعطلت في خطوة، أو أردت رأيا في زاوية أو هوك، اكتب لنا. أخبرنا بمجالك، والهدف، وما الذي طبّقته، والنتيجة التي ظهرت، وأين توقفت بالضبط — وسنبدأ معك من موضع المشكلة لا من البداية"
+      />
+
+      <h2>ارجع إلى أي مرحلة متى شئت</h2>
+      <div class="grid grid-2" style="margin-top:var(--sp-4)">
+        {
+          STAGES.map((st) => {
+            const target = lessons.find((l) => l.data.stage === st.n);
+            return (
+              <a
+                class="stage-card"
+                style={`background:var(--${st.tone}-bg)`}
+                href={target ? routes.lesson(target.id) : routes.map()}
+              >
+                <span class="n" style={`color:var(--${st.tone}-ink)`}>{st.n}</span>
+                <span><span class="t">{st.title}</span></span>
+              </a>
+            );
+          })
+        }
+      </div>
+
+      <p style="margin-top:var(--sp-6)">
+        <a class="btn btn--quiet" href={routes.apps()}>افتح القوالب</a>
+      </p>
+    </article>
+  </div>
+</Base>
+
+<script define:vars={{ stageRows, lessonRows, coreIds, appCount: apps.length }}>
+  window.__finish = { stageRows, lessonRows, coreIds, appCount };
+</script>
+
+<script>
+  import { read, ratio } from '../lib/progress';
+
+  interface StageRow { n: number; t: string; tone: string; out: string }
+  interface LessonRow { id: string; s: number; c: boolean }
+  const F = (window as unknown as {
+    __finish: { stageRows: StageRow[]; lessonRows: LessonRow[]; coreIds: string[]; appCount: number };
+  }).__finish;
+
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const s = read();
+  const owned = document.getElementById('owned');
+
+  if (owned) {
+    owned.innerHTML = F.stageRows
+      .map((st) => {
+        const core = F.lessonRows.filter((l) => l.s === st.n && l.c);
+        const dn = core.filter((l) => s.done[l.id]).length;
+        const full = core.length > 0 && dn === core.length;
+        return `<div style="background:var(--${st.tone}-bg);border-radius:var(--r-md);padding:var(--sp-4)">
+          <p style="font-family:var(--f-ui);font-weight:600;margin-bottom:2px">${esc(st.t)}
+            ${full ? '<span class="badge badge--done">مكتملة</span>' : `<span class="badge badge--opt">${dn} من ${core.length}</span>`}
+          </p>
+          <p class="small" style="margin:0;color:var(--ink-soft)">${esc(st.out)}</p>
+        </div>`;
+      })
+      .join('');
+
+    const r = Math.round(ratio(s.done, F.coreIds) * 100);
+    const started = Object.keys(s.apps).length;
+    owned.insertAdjacentHTML(
+      'beforeend',
+      `<p class="small muted" style="margin-top:var(--sp-2)">أنجزت <span class="num">${r}%</span> من المسار الأساسي، وبدأت <span class="num">${started}</span> من <span class="num">${F.appCount}</span> قوالب</p>`,
+    );
+  }
+</script>

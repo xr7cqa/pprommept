@@ -1,0 +1,50 @@
+---
+import Icon from '../Icon.astro';
+import { renderPromptHtml } from '../../lib/placeholders';
+
+/** بطاقة برومبت قابلة للنسخ — تُستخدم داخل الدروس وداخل مكتبة البرومبتات */
+interface Props {
+  title: string;
+  /** نص البرومبت الخام بمتغيراته */
+  body: string;
+  /** متى يُستخدم */
+  when?: string;
+  /** معيار الحكم على النتيجة */
+  quality?: string;
+  /** رابط الشرح المرتبط */
+  conceptHref?: string;
+  conceptLabel?: string;
+  id?: string;
+}
+const { title, body, when, quality, conceptHref, conceptLabel, id } = Astro.props;
+const uid = id ?? `p-${Math.random().toString(36).slice(2, 9)}`;
+const html = renderPromptHtml(body.trim());
+---
+
+<div class="prompt-card">
+  <p class="box-h">برومبت</p>
+  <h3 style="font-family:var(--f-ui);font-size:var(--t-lg);margin-bottom:var(--sp-2)">{title}</h3>
+  {when && <p class="small muted" style="margin-bottom:var(--sp-3)">{when}</p>}
+
+  <div class="prompt-body" id={uid} data-raw={body.trim()} set:html={html} />
+
+  <p class="small muted" style="margin-bottom:var(--sp-3)">
+    استبدل الشرائح الملونة بمعلوماتك قبل الإرسال
+  </p>
+
+  <div class="btn-row">
+    <button class="btn btn--sm copy-btn" type="button" data-copy={`#${uid}`}>
+      <Icon name="copy" size={17} />
+      <span data-copy-label>انسخ البرومبت</span>
+    </button>
+    {conceptHref && (
+      <a class="btn btn--sm btn--quiet" href={conceptHref}>{conceptLabel ?? 'اقرأ الشرح'}</a>
+    )}
+  </div>
+
+  {quality && (
+    <p class="small" style="margin:var(--sp-4) 0 0;color:var(--violet)">
+      <strong style="font-family:var(--f-ui)">تعرف أن النتيجة جيدة حين</strong> {quality}
+    </p>
+  )}
+</div>

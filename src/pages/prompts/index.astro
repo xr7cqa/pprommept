@@ -1,0 +1,155 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { routes } from '../../lib/url';
+
+const items = (await getCollection('prompts')).sort(
+  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title, 'ar'),
+);
+
+const platforms = Array.from(new Set(items.map((p) => p.data.platform)));
+const tasks = Array.from(new Set(items.map((p) => p.data.task)));
+
+const rows = items.map((p) => ({
+  id: p.id,
+  title: p.data.title,
+  platform: p.data.platform,
+  task: p.data.task,
+  when: p.data.when,
+  href: routes.prompt(p.id),
+}));
+---
+
+<Base
+  title="مكتبة البرومبتات"
+  description="برومبتات مكتوبة لمهمة ومنصة محددة، مع متغيراتها ومثال إدخال ونتيجة ومعيار حكم"
+>
+  <section class="page-hero" style="background:var(--s4-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s4-ink)">مكتبة مرجعية</p>
+      <h1>البرومبتات</h1>
+      <p class="lead">
+        {items.length} برومبتا، لكل واحد مهمة واضحة ومتغيرات تملؤها أنت. اختر المنصة والمهمة،
+        أو ابحث بالكلمة
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <form class="search-form" role="search" onsubmit="return false">
+      <label class="sr-only" for="q">ابحث داخل مكتبة البرومبتات</label>
+      <input class="search-input" id="q" type="search" placeholder="ابحث بالمهمة أو الكلمة" autocomplete="off" />
+    </form>
+
+    <fieldset style="border:0;padding:0;margin:0 0 var(--sp-4)">
+      <legend class="eyebrow">المنصة</legend>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2)">
+        <button class="chip chip--on" type="button" data-filter="platform" data-value="">كل المنصات</button>
+        {platforms.map((p) => (
+          <button class="chip" type="button" data-filter="platform" data-value={p}>{p}</button>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset style="border:0;padding:0;margin:0 0 var(--sp-5)">
+      <legend class="eyebrow">المهمة</legend>
+      <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2)">
+        <button class="chip chip--on" type="button" data-filter="task" data-value="">كل المهمات</button>
+        {tasks.map((t) => (
+          <button class="chip" type="button" data-filter="task" data-value={t}>{t}</button>
+        ))}
+      </div>
+    </fieldset>
+
+    <p class="small muted" id="count" aria-live="polite"></p>
+
+    <div class="grid grid-2" id="list" style="margin-top:var(--sp-3)">
+      {
+        rows.map((p) => (
+          <a
+            class="lesson-card"
+            href={p.href}
+            data-platform={p.platform}
+            data-task={p.task}
+            data-text={`${p.title} ${p.when} ${p.task} ${p.platform}`}
+            style="background:var(--s4-bg);box-shadow:none"
+          >
+            <span class="t">{p.title}</span>
+            <span class="o">{p.when}</span>
+            <span class="row">
+              <span class="chip">{p.platform}</span>
+              <span class="chip">{p.task}</span>
+              <span class="badge badge--done" data-fav hidden>مفضل</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+    <p class="empty" id="empty" hidden>لا يوجد برومبت يطابق هذا الاختيار. جرّب اختيارا أوسع</p>
+  </div>
+</Base>
+
+<script>
+  import { read } from '../../lib/progress';
+
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('#list > a'));
+  const count = document.getElementById('count');
+  const empty = document.getElementById('empty');
+  const q = document.getElementById('q') as HTMLInputElement | null;
+  const state = { platform: '', task: '', text: '' };
+
+  /* تطبيع عربي خفيف حتى تتطابق الهمزات والألفات وأشكال الياء والتاء المربوطة */
+  function norm(s: string): string {
+    return s
+      .toLowerCase()
+      .replace(/[ً-ْٰـ]/g, '')
+      .replace(/[آأإٱ]/g, 'ا')
+      .replace(/ى/g, 'ي')
+      .replace(/ة/g, 'ه')
+      .replace(/ؤ/g, 'و')
+      .replace(/ئ/g, 'ي')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function apply() {
+    let n = 0;
+    for (const c of cards) {
+      const okP = !state.platform || c.dataset.platform === state.platform;
+      const okT = !state.task || c.dataset.task === state.task;
+      const okQ = !state.text || norm(c.dataset.text ?? '').includes(state.text);
+      const show = okP && okT && okQ;
+      c.hidden = !show;
+      if (show) n += 1;
+    }
+    if (count) count.textContent = `${n} برومبتا معروضا`;
+    if (empty) empty.hidden = n !== 0;
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const key = b.dataset.filter as 'platform' | 'task';
+      state[key] = b.dataset.value ?? '';
+      document
+        .querySelectorAll<HTMLElement>(`[data-filter="${key}"]`)
+        .forEach((x) => x.classList.toggle('chip--on', x === b));
+      apply();
+    });
+  });
+
+  q?.addEventListener('input', () => {
+    state.text = norm(q.value);
+    apply();
+  });
+
+  const s = read();
+  cards.forEach((c) => {
+    const id = c.getAttribute('href')?.split('/').filter(Boolean).pop() ?? '';
+    if (s.favPrompts[id]) {
+      const f = c.querySelector<HTMLElement>('[data-fav]');
+      if (f) f.hidden = false;
+    }
+  });
+
+  apply();
+</script>

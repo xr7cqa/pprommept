@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import { STAGES } from '../lib/stages';
+import { routes } from '../lib/url';
+import Icon from './Icon.astro';
+
+const lessons = (await getCollection('course')).sort(
+  (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+);
+const current = Astro.url.pathname;
+---
+
+<dialog class="drawer" id="path-drawer" aria-label="مراحل الكورس ودروسه">
+  <div class="drawer-panel">
+    <div class="drawer-head">
+      <h2>مسار الكورس</h2>
+      <button class="drawer-close" type="button" data-close-drawer aria-label="أغلق قائمة المسار">
+        <Icon name="close" size={22} />
+      </button>
+    </div>
+
+    <p class="small muted" style="margin-bottom:var(--sp-5)">
+      الترتيب موصى به وليس مقفلا، وتستطيع فتح أي درس متى شئت
+    </p>
+
+    {
+      STAGES.map((st) => (
+        <section class="drawer-stage" style={`background:var(--${st.tone}-bg)`}>
+          <div class="h" style={`color:var(--${st.tone}-ink)`}>
+            {st.n} · {st.title}
+          </div>
+          <ol>
+            {lessons
+              .filter((l) => l.data.stage === st.n)
+              .map((l, i) => (
+                <li>
+                  <a
+                    href={routes.lesson(l.id)}
+                    data-lesson-id={l.id}
+                    aria-current={routes.lesson(l.id) === current ? 'page' : undefined}
+                  >
+                    <span class="num">{st.n}.{i + 1}</span>
+                    <span>{l.data.title}</span>
+                  </a>
+                </li>
+              ))}
+          </ol>
+        </section>
+      ))
+    }
+
+    <nav aria-label="مكتبات الكورس" style="display:grid;gap:var(--sp-2);margin-top:var(--sp-5)">
+      <a class="btn btn--quiet" href={routes.map()}>خريطة المسار</a>
+      <a class="btn btn--quiet" href={routes.platforms()}>مكتبة المنصات</a>
+      <a class="btn btn--quiet" href={routes.prompts()}>مكتبة البرومبتات</a>
+      <a class="btn btn--quiet" href={routes.apps()}>القوالب والتطبيقات</a>
+    </nav>
+  </div>
+</dialog>

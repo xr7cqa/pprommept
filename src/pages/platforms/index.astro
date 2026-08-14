@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { routes } from '../../lib/url';
+
+const items = (await getCollection('platforms')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base
+  title="مكتبة المنصات"
+  description="منطق كل منصة: كيف يكتشف الناس المحتوى فيها، وصيغتها الأصلية، وما يقتل الفكرة الجيدة عند النقل"
+>
+  <section class="page-hero" style="background:var(--s6-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s6-ink)">مكتبة مرجعية</p>
+      <h1>المنصات</h1>
+      <p class="lead">
+        هذه المكتبة مرجع تفتحه وقت الحاجة، لا مسار تقرؤه بالترتيب. ابدأ بالمنصة التي تنشر
+        فيها فعلا، أو التي تفكر في دخولها
+      </p>
+      <p class="small muted" style="margin-top:var(--sp-4)">
+        قراءة هذه الصفحات لا تدخل في حساب تقدمك، فلا تشعر أنك مطالب بإنهائها كلها
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <div class="grid grid-2">
+      {
+        items.map((p) => (
+          <a
+            class="stage-card"
+            style={`background:var(--${p.data.tone}-bg);align-items:flex-start`}
+            href={routes.platform(p.id)}
+          >
+            <span>
+              <span class="t" style={`color:var(--${p.data.tone}-ink)`}>
+                {p.data.title} <bdi class="lat small">({p.data.latin})</bdi>
+              </span>
+              <span class="d" style="display:block;margin-top:4px">{p.data.summary}</span>
+              <span class="meta">الصيغة الأصلية: {p.data.nativeFormat}</span>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="box-note" style="margin-top:var(--sp-7)">
+      <p class="box-h">كيف تقرأ هذه المكتبة</p>
+      <p style="margin-bottom:0">
+        في كل صفحة منصة تجد ثلاثة تصنيفات مختلفة للمعلومة: ما تعلنه المنصة رسميا، وما نستنتجه
+        من التجربة المتكررة، وما يبقى فرضية عليك أنت أن تختبرها على حسابك. لا تعامل الثلاثة
+        معاملة واحدة
+      </p>
+    </div>
+  </div>
+</Base>

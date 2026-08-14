@@ -1,0 +1,262 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { STAGES } from '../lib/stages';
+import { routes } from '../lib/url';
+
+const lessons = (await getCollection('course')).sort(
+  (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+);
+const apps = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order);
+
+/** جدول خفيف يقرأه المتصفح لبناء البطاقات الحية بلا تكرار المحتوى */
+const table = lessons.map((l) => ({
+  id: l.id,
+  t: l.data.title,
+  s: l.data.stage,
+  c: l.data.core,
+  h: routes.lesson(l.id),
+}));
+const appTable = apps.map((a) => ({ id: a.id, t: a.data.title, h: routes.app(a.id) }));
+const stageMeta = STAGES.map((s) => ({ n: s.n, t: s.title, tone: s.tone, slug: s.slug }));
+const first = lessons[0];
+---
+
+<Base title="لوحتك" description="تابع من حيث توقفت، وشاهد تقدمك ومخرجاتك ووصولك السريع إلى المكتبات">
+  <section class="page-hero" style="background:var(--s3-bg)">
+    <div class="wrap hero-split">
+      <div>
+        <p class="eyebrow" style="color:var(--s3-ink)">لوحة المتعلم</p>
+        <h1 style="margin-bottom:var(--sp-3)">أين وصلت</h1>
+        <p class="lead">
+          تقدمك محفوظ داخل متصفحك. افتح أي درس متى شئت، وسنعيدك دائما إلى آخر موضع وقفت عنده
+        </p>
+      </div>
+
+      <div id="resume" style="min-block-size:13.5rem">
+        <!-- تُبنى بالمتصفح؛ وقبل ذلك تظهر بداية معقولة تعمل بلا جافاسكربت -->
+        <noscript>
+          <p class="lead">
+            المتصفح يمنع تشغيل النصوص البرمجية، لذلك لا يظهر تقدمك هنا. الدروس والتنقل تعمل كالمعتاد
+          </p>
+        </noscript>
+        {first && (
+          <div data-fallback style="background:rgba(255,255,255,.62);border-radius:var(--r-lg);padding:var(--sp-5)">
+            <p class="eyebrow" style="margin-bottom:var(--sp-2)">ابدأ من هنا</p>
+            <p style="font-family:var(--f-ui);font-weight:600;font-size:var(--t-xl);line-height:1.5;margin-bottom:var(--sp-4)">
+              {first.data.title}
+            </p>
+            <a class="btn" href={routes.lesson(first.id)}>ابدأ الكورس</a>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <section data-needs-storage hidden>
+      <h2>تقدمك</h2>
+      <div style="max-width:34rem">
+        <div class="progress"><i data-progress-bar style="width:0%"></i></div>
+        <p class="small muted" style="margin-top:var(--sp-2)" data-progress-text></p>
+      </div>
+    </section>
+
+    <section style="margin-top:var(--sp-7)">
+      <h2>خريطة المراحل</h2>
+      <div class="stage-grid" style="margin-top:var(--sp-4)" id="stage-list">
+        {
+          STAGES.map((st) => {
+            const rows = lessons.filter((l) => l.data.stage === st.n);
+            const core = rows.filter((l) => l.data.core);
+            const target = rows[0];
+            return (
+              <a
+                class="stage-card"
+                style={`background:var(--${st.tone}-bg)`}
+                href={target ? routes.lesson(target.id) : routes.map()}
+                data-stage={String(st.n)}
+              >
+                <span class="n" style={`color:var(--${st.tone}-ink)`}>{st.n}</span>
+                <span style="flex:1;min-inline-size:0">
+                  <span class="t">{st.title}</span>
+                  <span class="meta" data-stage-meta><span class="num">0</span> من <span class="num">{core.length}</span> · <span class="num">0%</span></span>
+                  <span class="progress" style="margin-top:6px;max-width:14rem">
+                    <i data-stage-bar style="width:0%"></i>
+                  </span>
+                </span>
+              </a>
+            );
+          })
+        }
+      </div>
+    </section>
+
+    <section style="margin-top:var(--sp-7)" data-needs-storage hidden>
+      <h2>الخطوة المقترحة</h2>
+      <div id="suggest" class="box-apply" style="max-width:34rem;min-block-size:9.5rem"></div>
+    </section>
+
+    <section style="margin-top:var(--sp-7)">
+      <h2>وصول سريع</h2>
+      <div class="grid grid-3" style="margin-top:var(--sp-4)">
+        <a class="stage-card" style="background:var(--s6-bg)" href={routes.platforms()}>
+          <span class="n" style="color:var(--s6-ink)"><Icon name="grid" size={24} /></span>
+          <span><span class="t">مكتبة المنصات</span></span>
+        </a>
+        <a class="stage-card" style="background:var(--s4-bg)" href={routes.prompts()}>
+          <span class="n" style="color:var(--s4-ink)"><Icon name="copy" size={24} /></span>
+          <span><span class="t">مكتبة البرومبتات</span></span>
+        </a>
+        <a class="stage-card" style="background:var(--s5-bg)" href={routes.apps()}>
+          <span class="n" style="color:var(--s5-ink)"><Icon name="check" size={24} /></span>
+          <span><span class="t">القوالب والتطبيقات</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section style="margin-top:var(--sp-7)" data-needs-storage hidden>
+      <h2>مخرجاتك</h2>
+      <div id="outputs" class="grid grid-2" style="margin-top:var(--sp-4)"></div>
+    </section>
+
+    <section style="margin-top:var(--sp-7)" data-needs-storage hidden>
+      <h2>محفوظاتك</h2>
+      <div id="saved" style="margin-top:var(--sp-4)"></div>
+    </section>
+
+    <section style="margin-top:var(--sp-8);padding-bottom:var(--sp-6)" data-needs-storage hidden>
+      <h2>إعادة الضبط</h2>
+      <p class="muted" style="max-width:34rem">
+        يمسح كل ما حفظه المتصفح: الدروس المنجزة، والمحفوظات، والبرومبتات المفضلة، وعلامات قوائم الفحص.
+        لا يمكن التراجع بعد التأكيد
+      </p>
+      <button class="btn btn--quiet" type="button" id="reset-btn">أعد ضبط تقدمي</button>
+      <div id="reset-confirm" hidden class="notice" style="margin-top:var(--sp-4);max-width:34rem">
+        <p style="margin-bottom:var(--sp-3)">هل تريد فعلا مسح كل تقدمك؟ هذا الإجراء نهائي</p>
+        <div class="btn-row">
+          <button class="btn btn--sm" type="button" id="reset-yes">نعم، امسح كل شيء</button>
+          <button class="btn btn--sm btn--quiet" type="button" id="reset-no">تراجع</button>
+        </div>
+      </div>
+      <p id="reset-done" hidden class="small" style="margin-top:var(--sp-3);color:var(--ok)">
+        تم مسح التقدم
+      </p>
+    </section>
+  </div>
+</Base>
+
+<script define:vars={{ table, stageMeta, appTable, mapHref: routes.map(), finishHref: routes.finish() }}>
+  window.__dash = { table, stageMeta, appTable, mapHref, finishHref };
+</script>
+
+<script>
+  import { read, ratio, reset, storageAvailable } from '../lib/progress';
+
+  interface Row { id: string; t: string; s: number; c: boolean; h: string }
+  interface StageRow { n: number; t: string; tone: string; slug: string }
+  interface AppRow { id: string; t: string; h: string }
+  const D = (window as unknown as {
+    __dash: { table: Row[]; stageMeta: StageRow[]; appTable: AppRow[]; mapHref: string; finishHref: string };
+  }).__dash;
+
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  const s = read();
+  const coreIds = D.table.filter((r) => r.c).map((r) => r.id);
+  const doneCount = coreIds.filter((id) => s.done[id]).length;
+  const r = ratio(s.done, coreIds);
+
+  if (storageAvailable()) {
+    document.querySelectorAll<HTMLElement>('[data-needs-storage]').forEach((el) => (el.hidden = false));
+  }
+
+  /* ── تابع من حيث توقفت: يعود إلى آخر درس حقيقي زاره المتعلم ── */
+  const resume = document.getElementById('resume');
+  if (resume && s.last) {
+    const stage = D.stageMeta.find((x) => x.n === s.last!.stage);
+    resume.innerHTML = `
+      <div style="background:rgba(255,255,255,.62);border-radius:var(--r-lg);padding:var(--sp-5)">
+        <p class="eyebrow" style="margin-bottom:var(--sp-2)">تابع من حيث توقفت</p>
+        <p style="font-family:var(--f-ui);font-weight:600;font-size:var(--t-xl);line-height:1.5;margin-bottom:var(--sp-2)">${esc(s.last.title)}</p>
+        <p class="small muted" style="margin-bottom:var(--sp-4)">المرحلة ${s.last.stage} · ${esc(stage?.t ?? '')}</p>
+        <a class="btn" href="${esc(s.last.href)}">أكمل هذا الدرس</a>
+      </div>`;
+  }
+
+  /* ── التقدم ── */
+  const bar = document.querySelector<HTMLElement>('[data-progress-bar]');
+  if (bar) bar.style.width = `${Math.round(r * 100)}%`;
+  const txt = document.querySelector<HTMLElement>('[data-progress-text]');
+  if (txt) txt.innerHTML = `أنجزت <span class="num">${doneCount}</span> من <span class="num">${coreIds.length}</span> درسا أساسيا · <span class="num">${Math.round(r * 100)}%</span>`;
+
+  /* ── خريطة المراحل مع تقدم كل مرحلة ── */
+  document.querySelectorAll<HTMLAnchorElement>('#stage-list > a[data-stage]').forEach((card) => {
+    const n = Number(card.dataset.stage);
+    const rows = D.table.filter((x) => x.s === n);
+    const core = rows.filter((x) => x.c);
+    const dn = core.filter((x) => s.done[x.id]).length;
+    const target = rows.find((x) => !s.done[x.id]) ?? rows[0];
+    const pct = core.length ? Math.round((dn / core.length) * 100) : 0;
+    const meta = card.querySelector<HTMLElement>('[data-stage-meta]');
+    const bar = card.querySelector<HTMLElement>('[data-stage-bar]');
+    if (meta) meta.innerHTML = `<span class="num">${dn}</span> من <span class="num">${core.length}</span> · <span class="num">${pct}%</span>`;
+    if (bar) bar.style.width = `${pct}%`;
+    if (target) card.href = target.h;
+  });
+
+  /* ── اقتراح واحد واضح للخطوة التالية ── */
+  const suggest = document.getElementById('suggest');
+  if (suggest) {
+    const nextRow = D.table.find((x) => x.c && !s.done[x.id]);
+    if (!nextRow) {
+      suggest.innerHTML = `<p class="box-h">اكتمل المسار الأساسي</p>
+        <p>أنجزت كل الدروس الأساسية. افتح صفحة الإتمام واقرأ الخطوة الأخيرة</p>
+        <a class="btn btn--sm" href="${esc(D.finishHref)}">افتح صفحة الإتمام</a>`;
+    } else {
+      suggest.innerHTML = `<p class="box-h">ادخل هنا الآن</p>
+        <p>${esc(nextRow.t)}</p>
+        <a class="btn btn--sm" href="${esc(nextRow.h)}">افتح الدرس</a>`;
+    }
+  }
+
+  /* ── المخرجات المكتملة: القوالب التي بدأها ── */
+  const outputs = document.getElementById('outputs');
+  if (outputs) {
+    const started = D.appTable.filter((a) => s.apps[a.id]);
+    outputs.innerHTML = started.length
+      ? started
+          .map(
+            (a) =>
+              `<a class="lesson-card" href="${esc(a.h)}"><span class="t">${esc(a.t)}</span><span class="o">بدأت هذا القالب</span></a>`,
+          )
+          .join('')
+      : `<p class="empty" style="grid-column:1/-1">لم تبدأ أي قالب بعد. القوالب هي المكان الذي تتحول فيه الدروس إلى ملفات تملكها</p>`;
+  }
+
+  /* ── المحفوظات ── */
+  const saved = document.getElementById('saved');
+  if (saved) {
+    const rows = D.table.filter((x) => s.saved[x.id]);
+    saved.innerHTML = rows.length
+      ? `<div class="grid grid-2">${rows
+          .map((x) => `<a class="lesson-card" href="${esc(x.h)}"><span class="t">${esc(x.t)}</span></a>`)
+          .join('')}</div>`
+      : `<p class="empty">لا توجد دروس محفوظة. زر «احفظ الدرس» داخل أي درس يضعه هنا</p>`;
+  }
+
+  /* ── إعادة الضبط بتأكيد واضح ── */
+  const rb = document.getElementById('reset-btn');
+  const rc = document.getElementById('reset-confirm');
+  rb?.addEventListener('click', () => { if (rc) rc.hidden = false; });
+  document.getElementById('reset-no')?.addEventListener('click', () => { if (rc) rc.hidden = true; });
+  document.getElementById('reset-yes')?.addEventListener('click', () => {
+    reset();
+    if (rc) rc.hidden = true;
+    const done = document.getElementById('reset-done');
+    if (done) done.hidden = false;
+    window.setTimeout(() => location.reload(), 700);
+  });
+</script>

@@ -1,0 +1,217 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import * as C from '../../components/content';
+import { stageByN, STAGES } from '../../lib/stages';
+import { routes } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const lessons = (await getCollection('course')).sort(
+    (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+  );
+  return lessons.map((entry, i) => ({
+    params: { id: entry.id },
+    props: {
+      entry,
+      prev: i > 0 ? lessons[i - 1] : null,
+      next: i < lessons.length - 1 ? lessons[i + 1] : null,
+      index: i,
+      total: lessons.length,
+      siblings: lessons.filter((l) => l.data.stage === entry.data.stage),
+    },
+  }));
+}
+
+const { entry, prev, next, siblings } = Astro.props;
+const d = entry.data;
+const st = stageByN(d.stage);
+const { Content } = await render(entry);
+const posInStage = siblings.findIndex((l) => l.id === entry.id) + 1;
+---
+
+<Base title={d.title} description={d.summary} bodyClass="has-bottom-bar">
+  <div
+    data-lesson-page
+    data-lesson-id={entry.id}
+    data-lesson-title={d.title}
+    data-lesson-stage={String(d.stage)}
+  >
+    <div class="lesson-hero" style={`background:var(--${st.tone}-bg)`}>
+      <div class="wrap">
+        <p class="kicker" style={`color:var(--${st.tone}-ink)`}>
+          <a href={routes.map()} style={`color:var(--${st.tone}-ink);text-decoration:none`}>
+            المرحلة {d.stage} · {st.title}
+          </a>
+          <span aria-hidden="true"> · </span>
+          الدرس {posInStage} من {siblings.length}
+        </p>
+        <h1>{d.title}</h1>
+        <p class="facts">
+          <span>{d.minutes} دقائق قراءة</span>
+          <span>{d.core ? 'درس أساسي' : 'درس اختياري'}</span>
+        </p>
+        <div class="rail" style="margin-top:var(--sp-4);max-width:22rem" aria-hidden="true">
+          {siblings.map((_, i) => <i class={i < posInStage ? 'on' : ''} />)}
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="lesson-layout">
+        <article class="lesson-body">
+          <div class="box-result">
+            <p class="box-h">ما ستملكه بعد هذا الدرس</p>
+            <p style="margin:0;font-family:var(--f-ui);font-size:var(--t-base);line-height:1.7">{d.outcome}</p>
+          </div>
+
+          <Content components={C} />
+
+          <div class="box-apply" style="margin-top:var(--sp-7)">
+            <p class="box-h">الخطوة التالية</p>
+            <p style="margin-bottom:0">{d.nextStep}</p>
+          </div>
+
+          <div class="btn-row" style="margin-top:var(--sp-6)" data-needs-storage>
+            <button class="btn" type="button" data-complete aria-pressed="false">
+              <Icon name="check" size={18} />
+              <span data-complete-label>أنجزت هذا الدرس</span>
+            </button>
+            <button class="btn btn--quiet" type="button" data-save aria-pressed="false">
+              <Icon name="bookmark" size={18} />
+              <span data-save-label>احفظ الدرس</span>
+            </button>
+          </div>
+
+          <p class="small muted" style="margin-top:var(--sp-4)" data-storage-warning hidden>
+            متصفحك يمنع الحفظ المحلي، لذلك لن يُحفظ تقدمك. المحتوى والتنقل يعملان كالمعتاد
+          </p>
+
+          <nav class="prevnext" aria-label="التنقل بين الدروس">
+            {prev ? (
+              <a href={routes.lesson(prev.id)} rel="prev">
+                <span class="l">الدرس السابق</span>
+                <span class="t">{prev.data.title}</span>
+              </a>
+            ) : (
+              <a href={routes.map()}>
+                <span class="l">البداية</span>
+                <span class="t">خريطة المسار</span>
+              </a>
+            )}
+            {next ? (
+              <a href={routes.lesson(next.id)} rel="next" class="next">
+                <span class="l">الدرس التالي</span>
+                <span class="t">{next.data.title}</span>
+              </a>
+            ) : (
+              <a href={routes.finish()} class="next">
+                <span class="l">وصلت إلى النهاية</span>
+                <span class="t">صفحة الإتمام</span>
+              </a>
+            )}
+          </nav>
+        </article>
+
+        <aside class="lesson-aside" aria-label="دروس هذه المرحلة">
+          <div class="drawer-stage" style={`background:var(--${st.tone}-bg)`}>
+            <p class="h" style={`color:var(--${st.tone}-ink)`}>{st.title}</p>
+            <ol>
+              {siblings.map((l, i) => (
+                <li>
+                  <a
+                    href={routes.lesson(l.id)}
+                    data-lesson-id={l.id}
+                    aria-current={l.id === entry.id ? 'page' : undefined}
+                  >
+                    <span class="num">{d.stage}.{i + 1}</span>
+                    <span>{l.data.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <p style="margin-top:var(--sp-4)">
+            <a class="btn btn--quiet btn--sm btn--full" href={routes.map()}>عد إلى خريطة المسار</a>
+          </p>
+          <p>
+            <a class="btn btn--quiet btn--sm btn--full" href={routes.dashboard()}>لوحتك</a>
+          </p>
+        </aside>
+      </div>
+    </div>
+
+    <nav class="bottom-bar" aria-label="تنقل الدرس">
+      {prev ? (
+        <a href={routes.lesson(prev.id)} rel="prev">
+          <Icon name="prev" size={18} />
+          <span>السابق</span>
+        </a>
+      ) : (
+        <a href={routes.map()}><Icon name="map" size={18} /><span>الخريطة</span></a>
+      )}
+      <button class="main" type="button" data-complete aria-pressed="false">
+        <Icon name="check" size={18} />
+        <span data-complete-label>أنجزت الدرس</span>
+      </button>
+      {next ? (
+        <a href={routes.lesson(next.id)} rel="next">
+          <span>التالي</span>
+          <Icon name="next" size={18} />
+        </a>
+      ) : (
+        <a href={routes.finish()}><span>الإتمام</span><Icon name="next" size={18} /></a>
+      )}
+    </nav>
+  </div>
+</Base>
+
+<script>
+  import { read, update } from '../../lib/progress';
+
+  const page = document.querySelector<HTMLElement>('[data-lesson-page]');
+  if (page) {
+    const id = page.dataset.lessonId!;
+
+    const completeBtns = document.querySelectorAll<HTMLButtonElement>('[data-complete]');
+    const saveBtns = document.querySelectorAll<HTMLButtonElement>('[data-save]');
+
+    function paint() {
+      const s = read();
+      const done = Boolean(s.done[id]);
+      const saved = Boolean(s.saved[id]);
+      completeBtns.forEach((b) => {
+        b.setAttribute('aria-pressed', String(done));
+        const l = b.querySelector<HTMLElement>('[data-complete-label]');
+        if (l) l.textContent = done ? 'أنجزته' : b.classList.contains('main') ? 'أنجزت الدرس' : 'أنجزت هذا الدرس';
+      });
+      saveBtns.forEach((b) => {
+        b.setAttribute('aria-pressed', String(saved));
+        const l = b.querySelector<HTMLElement>('[data-save-label]');
+        if (l) l.textContent = saved ? 'محفوظ' : 'احفظ الدرس';
+      });
+    }
+
+    completeBtns.forEach((b) =>
+      b.addEventListener('click', () => {
+        update((s) => {
+          if (s.done[id]) delete s.done[id];
+          else s.done[id] = Date.now();
+        });
+        paint();
+      }),
+    );
+
+    saveBtns.forEach((b) =>
+      b.addEventListener('click', () => {
+        update((s) => {
+          if (s.saved[id]) delete s.saved[id];
+          else s.saved[id] = Date.now();
+        });
+        paint();
+      }),
+    );
+
+    paint();
+  }
+</script>

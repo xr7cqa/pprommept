@@ -1,0 +1,36 @@
+---
+import Icon from './Icon.astro';
+import { routes } from '../lib/url';
+interface Props { drawer?: boolean }
+const { drawer = true } = Astro.props;
+const path = Astro.url.pathname;
+const isHome = path === routes.home();
+---
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href={routes.home()}>
+      صناعة المحتوى<span class="brand-rest"> بالذكاء الاصطناعي</span>
+    </a>
+    <span class="spacer"></span>
+
+    {!isHome && (
+      <a class="hbtn" href={routes.dashboard()} aria-label="لوحة المتعلم">
+        <Icon name="home" size={19} />
+        <span class="hbtn--label">لوحتك</span>
+      </a>
+    )}
+
+    <a class="hbtn" href={routes.search()} aria-label="ابحث في الكورس">
+      <Icon name="search" size={19} />
+      <span class="hbtn--label">بحث</span>
+    </a>
+
+    {drawer && (
+      <button class="hbtn" type="button" data-open-drawer aria-haspopup="dialog" aria-controls="path-drawer" aria-label="افتح قائمة مراحل الكورس">
+        <Icon name="menu" size={19} />
+        <span class="hbtn--label">المسار</span>
+        </button>
+    )}
+  </div>
+</header>

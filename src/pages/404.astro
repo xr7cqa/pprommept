@@ -1,0 +1,44 @@
+---
+import Base from '../layouts/Base.astro';
+import { routes } from '../lib/url';
+---
+
+<Base
+  title="الصفحة غير موجودة"
+  description="الرابط الذي فتحته غير موجود داخل الموقع"
+  indexable={false}
+  drawer={false}
+>
+  <section class="page-hero" style="background:var(--s7-bg)">
+    <div class="wrap">
+      <p class="eyebrow" style="color:var(--s7-ink)">خطأ 404</p>
+      <h1>هذه الصفحة غير موجودة</h1>
+      <p class="lead">
+        الرابط الذي فتحته لا يوافق أي درس أو مكتبة داخل الموقع. غالبا الرابط قديم أو فيه حرف ناقص
+      </p>
+      <div class="btn-row" style="margin-top:var(--sp-6);max-width:30rem">
+        <a class="btn" href={routes.dashboard()}>عد إلى لوحتك</a>
+        <a class="btn btn--ghost" href={routes.map()}>افتح خريطة المسار</a>
+      </div>
+      <p style="margin-top:var(--sp-4)" data-last-wrap hidden>
+        <a class="btn btn--quiet" href={routes.home()} data-last-link>عد إلى آخر درس فتحته</a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { read, storageAvailable } from '../lib/progress';
+  if (storageAvailable()) {
+    const s = read();
+    if (s.last) {
+      const wrap = document.querySelector<HTMLElement>('[data-last-wrap]');
+      const link = document.querySelector<HTMLAnchorElement>('[data-last-link]');
+      if (wrap && link) {
+        link.href = s.last.href;
+        link.textContent = `عد إلى: ${s.last.title}`;
+        wrap.hidden = false;
+      }
+    }
+  }
+</script>

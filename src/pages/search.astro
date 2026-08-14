@@ -1,0 +1,147 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { routes, url } from '../lib/url';
+import { STAGES } from '../lib/stages';
+
+const lessons = (await getCollection('course')).sort(
+  (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+);
+const indexUrl = url('search-index.json');
+---
+
+<Base title="بحث" description="ابحث داخل الدروس والمنصات والبرومبتات والقوالب" indexable={false}>
+  <section class="page-hero" style="background:var(--s2-bg)">
+    <div class="wrap">
+      <h1>ابحث في الكورس</h1>
+      <p class="lead">
+        البحث يشمل الدروس والمصطلحات والمنصات والبرومبتات والقوالب، ويتجاوز اختلاف الهمزات
+        والتاء المربوطة والتشكيل
+      </p>
+      <form class="search-form" role="search" style="margin-top:var(--sp-5);max-width:32rem" onsubmit="return false">
+        <label class="sr-only" for="q">كلمة البحث</label>
+        <input class="search-input" id="q" type="search" placeholder="مثال: الهوك، أو تيك توك، أو تموضع" autocomplete="off" autofocus />
+      </form>
+    </div>
+  </section>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <p class="small muted" id="status" aria-live="polite"></p>
+    <div id="results" style="margin-top:var(--sp-4)"></div>
+
+    <noscript>
+      <div class="notice" style="margin-bottom:var(--sp-5)">
+        البحث يحتاج تشغيل النصوص البرمجية. وحتى ذلك الحين، هذه قائمة كل الدروس مرتبة بالمراحل
+      </div>
+      {
+        STAGES.map((st) => (
+          <section style="margin-bottom:var(--sp-5)">
+            <h2>{st.n} · {st.title}</h2>
+            <ul>
+              {lessons.filter((l) => l.data.stage === st.n).map((l) => (
+                <li><a href={routes.lesson(l.id)}>{l.data.title}</a></li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </noscript>
+  </div>
+</Base>
+
+<script define:vars={{ indexUrl }}>
+  window.__indexUrl = indexUrl;
+</script>
+
+<script>
+  import { normalizeAr } from '../lib/normalize';
+
+  interface Doc { t: string; x: string; h: string; k: string; n: string }
+  const indexUrl = (window as unknown as { __indexUrl: string }).__indexUrl;
+
+  const input = document.getElementById('q') as HTMLInputElement | null;
+  const out = document.getElementById('results');
+  const status = document.getElementById('status');
+  let docs: Doc[] | null = null;
+  let loading = false;
+
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  async function load(): Promise<Doc[]> {
+    if (docs) return docs;
+    if (loading) return [];
+    loading = true;
+    if (status) status.textContent = 'يجري تحميل فهرس البحث';
+    try {
+      const res = await fetch(indexUrl);
+      const data = (await res.json()) as { docs: Doc[] };
+      docs = data.docs;
+    } catch {
+      docs = [];
+      if (status) status.textContent = 'تعذر تحميل فهرس البحث. حدّث الصفحة وحاول مرة أخرى';
+    }
+    loading = false;
+    return docs ?? [];
+  }
+
+  function score(doc: Doc, terms: string[]): number {
+    const title = normalizeAr(doc.t);
+    let s = 0;
+    for (const t of terms) {
+      if (!doc.n.includes(t)) return 0; // كل الكلمات يجب أن تظهر
+      if (title.includes(t)) s += 10;
+      const first = doc.n.indexOf(t);
+      s += Math.max(0, 6 - Math.floor(first / 400));
+      s += 1;
+    }
+    return s;
+  }
+
+  async function run() {
+    const raw = input?.value ?? '';
+    const q = normalizeAr(raw);
+    if (!out) return;
+    if (q.length < 2) {
+      out.innerHTML = '';
+      if (status) status.textContent = 'اكتب حرفين على الأقل';
+      return;
+    }
+    const all = await load();
+    const terms = q.split(' ').filter(Boolean);
+    const hits = all
+      .map((d) => ({ d, s: score(d, terms) }))
+      .filter((x) => x.s > 0)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 40);
+
+    if (status) {
+      status.textContent = hits.length
+        ? `${hits.length} نتيجة لـ «${raw.trim()}»`
+        : `لا نتائج لـ «${raw.trim()}». جرّب كلمة أقصر أو مرادفا لها`;
+    }
+
+    out.innerHTML = hits
+      .map(
+        ({ d }) => `<a class="search-result" href="${esc(d.h)}">
+          <span class="t">${esc(d.t)}</span>
+          <span class="x" style="display:block;margin-top:2px">${esc(d.x)}</span>
+          <span class="x" style="display:block;color:var(--ink-mute);font-family:var(--f-ui);font-size:var(--t-xs);margin-top:4px">${esc(d.k)}</span>
+        </a>`,
+      )
+      .join('');
+  }
+
+  let timer = 0;
+  input?.addEventListener('input', () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(run, 120);
+  });
+
+  // بحث مباشر من رابط فيه ?q=
+  const initial = new URLSearchParams(location.search).get('q');
+  if (initial && input) {
+    input.value = initial;
+    void run();
+  }
+</script>

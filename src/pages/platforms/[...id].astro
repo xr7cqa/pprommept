@@ -1,0 +1,86 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import * as C from '../../components/content';
+import { routes } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const items = (await getCollection('platforms')).sort((a, b) => a.data.order - b.data.order);
+  return items.map((entry, i) => ({
+    params: { id: entry.id },
+    props: { entry, prev: i > 0 ? items[i - 1] : null, next: items[i + 1] ?? null },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+
+const prompts = (await getCollection('prompts'))
+  .filter((p) => p.data.platform === d.latin)
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title={d.title} description={d.summary}>
+  <div class="page-hero" style={`background:var(--${d.tone}-bg)`}>
+    <div class="wrap">
+      <p class="eyebrow" style={`color:var(--${d.tone}-ink)`}>
+        <a href={routes.platforms()} style={`color:var(--${d.tone}-ink);text-decoration:none`}>مكتبة المنصات</a>
+      </p>
+      <h1>{d.title} <bdi class="lat" style="font-size:.62em">({d.latin})</bdi></h1>
+      <p class="lead">{d.summary}</p>
+      <dl class="grid grid-2" style="margin-top:var(--sp-5);max-width:44rem">
+        <div style="background:rgba(255,255,255,.55);border-radius:var(--r-md);padding:var(--sp-4)">
+          <dt class="eyebrow" style={`color:var(--${d.tone}-ink)`}>كيف يكتشف الناس المحتوى</dt>
+          <dd style="margin:0;font-size:var(--t-base)">{d.discovery}</dd>
+        </div>
+        <div style="background:rgba(255,255,255,.55);border-radius:var(--r-md);padding:var(--sp-4)">
+          <dt class="eyebrow" style={`color:var(--${d.tone}-ink)`}>الصيغة الأصلية</dt>
+          <dd style="margin:0;font-size:var(--t-base)">{d.nativeFormat}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <article class="lesson-body">
+      <Content components={C} />
+
+      {prompts.length > 0 && (
+        <section style="margin-top:var(--sp-7)">
+          <h2>برومبتات هذه المنصة</h2>
+          <p class="muted">مكتوبة لمنطق {d.title} تحديدا، لا نصا عاما مبدلا فيه اسم المنصة</p>
+          <div style="display:grid;gap:var(--sp-3);margin-top:var(--sp-4)">
+            {prompts.map((p) => (
+              <a class="lesson-card" href={routes.prompt(p.id)}>
+                <span class="t">{p.data.title}</span>
+                <span class="o">{p.data.when}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <nav class="prevnext" aria-label="التنقل بين المنصات">
+        {prev ? (
+          <a href={routes.platform(prev.id)} rel="prev">
+            <span class="l">السابق</span><span class="t">{prev.data.title}</span>
+          </a>
+        ) : (
+          <a href={routes.platforms()}><span class="l">عودة</span><span class="t">مكتبة المنصات</span></a>
+        )}
+        {next ? (
+          <a href={routes.platform(next.id)} rel="next" class="next">
+            <span class="l">التالي</span><span class="t">{next.data.title}</span>
+          </a>
+        ) : (
+          <a href={routes.platforms()} class="next"><span class="l">عودة</span><span class="t">مكتبة المنصات</span></a>
+        )}
+      </nav>
+
+      <p style="margin-top:var(--sp-6)">
+        <a class="btn btn--quiet" href={routes.platforms()}>عد إلى مكتبة المنصات</a>
+      </p>
+    </article>
+  </div>
+</Base>

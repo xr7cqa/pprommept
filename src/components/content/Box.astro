@@ -1,0 +1,24 @@
+---
+/** بطاقة وظيفية داخل متن الدرس — الشكل يتغير بحسب الوظيفة لا بحسب اللون فقط */
+interface Props {
+  kind: 'example' | 'apply' | 'warn' | 'note' | 'result' | 'check' | 'compare';
+  title?: string;
+}
+const { kind, title } = Astro.props;
+
+const defaults: Record<Props['kind'], string> = {
+  example: 'مثال',
+  apply: 'طبّق الآن',
+  warn: 'خطأ شائع',
+  note: 'ملاحظة خبير',
+  result: 'ما صار عندك',
+  check: 'قائمة فحص',
+  compare: 'مقارنة',
+};
+const heading = title ?? defaults[kind];
+---
+
+<div class={`box-${kind}`}>
+  <p class="box-h">{heading}</p>
+  <slot />
+</div>

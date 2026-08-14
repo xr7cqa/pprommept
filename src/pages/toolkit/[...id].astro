@@ -1,0 +1,101 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import * as C from '../../components/content';
+import { routes } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const items = (await getCollection('apps')).sort((a, b) => a.data.order - b.data.order);
+  return items.map((entry, i) => ({
+    params: { id: entry.id },
+    props: { entry, prev: i > 0 ? items[i - 1] : null, next: items[i + 1] ?? null },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+const lessons = await getCollection('course');
+const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
+---
+
+<Base title={d.title} description={d.summary}>
+  <div class="page-hero" style={`background:var(--${d.tone}-bg)`}>
+    <div class="wrap">
+      <p class="eyebrow" style={`color:var(--${d.tone}-ink)`}>
+        <a href={routes.apps()} style={`color:var(--${d.tone}-ink);text-decoration:none`}>القوالب والتطبيقات</a>
+      </p>
+      <h1>{d.title}</h1>
+      <p class="lead">{d.summary}</p>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:var(--sp-6)">
+    <article class="lesson-body">
+      <div class="box-result">
+        <p class="box-h">ما تخرج به من هذا القالب</p>
+        <p style="margin:0;font-family:var(--f-ui);line-height:1.7">{d.outcome}</p>
+      </div>
+
+      <Content components={C} />
+
+      <div class="btn-row" style="margin-top:var(--sp-6)" data-needs-storage>
+        <button class="btn" type="button" data-app-start aria-pressed="false">
+          <Icon name="check" size={18} />
+          <span data-app-label>بدأت هذا القالب</span>
+        </button>
+        {concept && <a class="btn btn--quiet" href={routes.lesson(concept.id)}>اقرأ الدرس المرتبط</a>}
+      </div>
+
+      <nav class="prevnext" aria-label="التنقل بين القوالب">
+        {prev ? (
+          <a href={routes.app(prev.id)} rel="prev"><span class="l">السابق</span><span class="t">{prev.data.title}</span></a>
+        ) : (
+          <a href={routes.apps()}><span class="l">عودة</span><span class="t">كل القوالب</span></a>
+        )}
+        {next ? (
+          <a href={routes.app(next.id)} rel="next" class="next"><span class="l">التالي</span><span class="t">{next.data.title}</span></a>
+        ) : (
+          <a href={routes.apps()} class="next"><span class="l">عودة</span><span class="t">كل القوالب</span></a>
+        )}
+      </nav>
+
+      <p style="margin-top:var(--sp-6)">
+        <a class="btn btn--quiet" href={routes.apps()}>عد إلى القوالب</a>
+      </p>
+    </article>
+  </div>
+</Base>
+
+<script define:vars={{ appId: entry.id }}>
+  window.__appId = appId;
+</script>
+
+<script>
+  import { read, update } from '../../lib/progress';
+  const id = (window as unknown as { __appId: string }).__appId;
+  const btns = document.querySelectorAll<HTMLButtonElement>('[data-app-start]');
+
+  function paint() {
+    const s = read();
+    const on = Boolean(s.apps[id]);
+    btns.forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      const l = b.querySelector<HTMLElement>('[data-app-label]');
+      if (l) l.textContent = on ? 'بدأته' : 'بدأت هذا القالب';
+    });
+  }
+
+  btns.forEach((b) =>
+    b.addEventListener('click', () => {
+      update((s) => {
+        if (s.apps[id]) delete s.apps[id];
+        else s.apps[id] = Date.now();
+      });
+      paint();
+    }),
+  );
+
+  paint();
+</script>

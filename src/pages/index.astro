@@ -1,0 +1,181 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import SupportCard from '../components/SupportCard.astro';
+import { STAGES } from '../lib/stages';
+import { routes } from '../lib/url';
+
+const lessons = (await getCollection('course')).sort(
+  (a, b) => a.data.stage - b.data.stage || a.data.order - b.data.order,
+);
+const first = lessons[0];
+const coreCount = lessons.filter((l) => l.data.core).length;
+const platforms = await getCollection('platforms');
+const prompts = await getCollection('prompts');
+const apps = await getCollection('apps');
+
+const outputs = [
+  ['مجال يمكن خدمته', 'لا «مجال واسع» ولا مجال ضيق إلى درجة تخنقك'],
+  ['وثيقة جمهور', 'مشكلته ولغته واعتراضاته مكتوبة أمامك'],
+  ['حساب مجهز', 'الاسم واليوزر والصورة والبايو والمنشور المثبت'],
+  ['أعمدة محتوى', 'ثلاثة إلى خمسة أعمدة مكتوبة على مجالك أنت'],
+  ['بنك أفكار', 'أفكار مصنّفة بالعمود والمنصة والجهد'],
+  ['نظام ذكاء اصطناعي', 'سياق ثابت تعطيه للأداة، وطريقة نقد تحفظ صوتك'],
+  ['أول 15 قطعة', 'جاهزة أو شبه جاهزة للنشر'],
+  ['لوحة قياس', 'تخبرك متى تعدّل ومتى توقف ومتى تضاعف'],
+];
+---
+
+<Base
+  title="الرئيسية"
+  description="كورس عربي تفاعلي يحوّل خبرتك أو مشروعك إلى نظام محتوى: مجال واضح، وحساب مجهز، وأول 15 قطعة جاهزة للنشر"
+>
+  <section class="page-hero" style="background:linear-gradient(180deg,var(--s1-bg),var(--paper))">
+    <div class="wrap">
+      <p class="eyebrow">كورس تطبيقي · سبع مراحل</p>
+      <h1>
+        عندك خبرة،<br />
+        وما تعرف <span style="color:var(--acc)">وش تنشر</span>
+      </h1>
+      <p class="lead">
+        تدخل ومعك مهنة أو مشروع أو معرفة تراها عادية، وتخرج بنظام محتوى مكتوب على مجالك أنت،
+        وحساب مجهز من الاسم إلى المنشور المثبت، وأول خمس عشرة قطعة جاهزة للنشر
+      </p>
+      <div class="btn-row" style="margin-top:var(--sp-6);max-width:30rem">
+        {first && <a class="btn" href={routes.lesson(first.id)}>ابدأ الكورس</a>}
+        <a class="btn btn--ghost" href={routes.map()}>شاهد خريطة الكورس</a>
+      </div>
+      <p class="small muted" style="margin-top:var(--sp-4)" data-needs-storage hidden>
+        <a href={routes.dashboard()}>تابع من حيث توقفت</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="wrap" style="margin-top:var(--sp-7)">
+    <h2>سبع مراحل، وكل مرحلة تنتهي بشيء تملكه</h2>
+    <p class="muted" style="max-width:34rem">
+      الترتيب موصى به لأن كل مرحلة تحتاج ما قبلها، لكنه غير مقفل. تستطيع فتح أي درس متى شئت
+    </p>
+    <div style="display:grid;gap:var(--sp-2);margin-top:var(--sp-5)">
+      {
+        STAGES.map((st) => {
+          const n = lessons.filter((l) => l.data.stage === st.n).length;
+          const target = lessons.find((l) => l.data.stage === st.n);
+          return (
+            <a
+              class="stage-card"
+              style={`background:var(--${st.tone}-bg)`}
+              href={target ? routes.lesson(target.id) : routes.map()}
+            >
+              <span class="n" style={`color:var(--${st.tone}-ink)`}>{st.n}</span>
+              <span>
+                <span class="t">{st.title}</span>
+                <span class="d" style="display:block">{st.promise}</span>
+                <span class="meta">{n} دروس</span>
+              </span>
+            </a>
+          );
+        })
+      }
+    </div>
+  </section>
+
+  <section class="wrap" style="margin-top:var(--sp-8)">
+    <h2>ما الذي ستملكه فعلا</h2>
+    <p class="muted" style="max-width:34rem">
+      ليست معلومات تقرأها وتنساها. كل مرحلة تنتهي بملف أو قرار أو قطعة محتوى تخرج بها
+    </p>
+    <div class="grid grid-2" style="margin-top:var(--sp-5)">
+      {
+        outputs.map(([t, d]) => (
+          <div style="background:rgba(255,255,255,.55);border-radius:var(--r-md);padding:var(--sp-4);box-shadow:inset 0 0 0 1px var(--line-soft)">
+            <p style="font-family:var(--f-ui);font-weight:600;margin-bottom:2px">{t}</p>
+            <p class="small muted" style="margin:0">{d}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="wrap" style="margin-top:var(--sp-8)">
+    <h2>من أين تبدأ أنت</h2>
+    <div class="grid grid-2" style="margin-top:var(--sp-5)">
+      <div class="box-example" style="margin:0">
+        <p class="box-h">لم تنشر من قبل</p>
+        <p>
+          ابدأ من الدرس الأول وامشِ بالترتيب. المراحل الثلاث الأولى تبني الأساس الذي يجعل
+          كل ما بعده أسهل، ولا تحتاج فيها إلى حساب جاهز ولا إلى معدات
+        </p>
+        {first && <a class="btn btn--sm" href={routes.lesson(first.id)}>ابدأ من البداية</a>}
+      </div>
+      <div class="box-apply" style="margin:0">
+        <p class="box-h">تنشر منذ فترة وتشعر أن النتيجة متذبذبة</p>
+        <p>
+          افتح خريطة المسار واقرأ مخرج كل مرحلة. إن كان المخرج موجودا عندك مكتوبا فتجاوزها،
+          وإن كان في رأسك فقط فمرّ عليها. أغلب من ينشر بلا نتيجة تنقصه المرحلة الثالثة
+        </p>
+        <a class="btn btn--sm btn--quiet" href={routes.map()}>افتح الخريطة</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" style="margin-top:var(--sp-8)">
+    <h2>ومعك ثلاث مكتبات مفتوحة طول الوقت</h2>
+    <div class="grid grid-3" style="margin-top:var(--sp-5)">
+      <a class="stage-card" style="background:var(--s6-bg)" href={routes.platforms()}>
+        <span class="n" style="color:var(--s6-ink)"><Icon name="grid" size={26} /></span>
+        <span>
+          <span class="t">مكتبة المنصات</span>
+          <span class="d" style="display:block">منطق {platforms.length} منصات وكيف تتغير الفكرة عند النقل</span>
+        </span>
+      </a>
+      <a class="stage-card" style="background:var(--s4-bg)" href={routes.prompts()}>
+        <span class="n" style="color:var(--s4-ink)"><Icon name="copy" size={26} /></span>
+        <span>
+          <span class="t">مكتبة البرومبتات</span>
+          <span class="d" style="display:block">{prompts.length} برومبتا مكتوبا لمهمة ومنصة محددة</span>
+        </span>
+      </a>
+      <a class="stage-card" style="background:var(--s3-bg)" href={routes.apps()}>
+        <span class="n" style="color:var(--s3-ink)"><Icon name="check" size={26} /></span>
+        <span>
+          <span class="t">القوالب والتطبيقات</span>
+          <span class="d" style="display:block">{apps.length} قوالب تملؤها فتخرج بمخرج حقيقي</span>
+        </span>
+      </a>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="box-note" style="margin-top:var(--sp-8)">
+      <p class="box-h">قبل أن تبدأ</p>
+      <p>
+        المطلوب منك التطبيق لا الحفظ. كل درس ينتهي بشيء تكتبه أو تقرره، وإن مررت على الدروس
+        قراءة فقط فستخرج بمعلومات لا بنظام. قلة الخبرة ليست مانعا، لكن الأداة لن تبني لك
+        هوية إن لم تعطها سياقا — وهذا بالضبط ما سنتدرب عليه
+      </p>
+      <p style="margin-bottom:0">
+        تقدمك يُحفظ داخل متصفحك وحده، فتستطيع إغلاق الصفحة والعودة إلى آخر درس متى شئت.
+        عدد {coreCount} درسا أساسيا يدخل في حساب التقدم، والمكتبات المرجعية مفتوحة بلا شرط
+      </p>
+    </div>
+
+    <SupportCard
+      heading="إذا تعطلت في التطبيق"
+      text="لسنا خدمة رد فوري، لكننا نقرأ الأسئلة ونرد عليها. أخبرنا بمجالك، وما الذي طبّقته، وأين توقفت بالضبط"
+    />
+  </section>
+</Base>
+
+<script>
+  import { storageAvailable, read } from '../lib/progress';
+  if (storageAvailable()) {
+    const s = read();
+    if (s.last) {
+      document.querySelectorAll<HTMLElement>('[data-needs-storage]').forEach((el) => {
+        el.hidden = false;
+      });
+    }
+  }
+</script>

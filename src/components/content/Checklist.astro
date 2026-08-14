@@ -1,0 +1,27 @@
+---
+/** قائمة فحص تحفظ حالتها محليا */
+interface Props {
+  title?: string;
+  /** مفتاح ثابت يميز القائمة داخل الموقع */
+  name: string;
+  items: string[];
+}
+const { title = 'قائمة فحص', name, items } = Astro.props;
+---
+
+<div class="box-check">
+  <p class="box-h">{title}</p>
+  <ul class="checklist">
+    {
+      items.map((it, i) => (
+        <li>
+          <input type="checkbox" id={`${name}-${i}`} data-check-key={`${name}:${i}`} />
+          <label for={`${name}-${i}`}>{it}</label>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="small muted" style="margin:var(--sp-3) 0 0" data-storage-warning hidden>
+    متصفحك يمنع الحفظ المحلي، فعلامات هذه القائمة لن تبقى بعد إغلاق الصفحة
+  </p>
+</div>

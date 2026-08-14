@@ -1,0 +1,18 @@
+# مخرجات البناء
+dist/
+.astro/
+
+# التبعيات
+node_modules/
+
+# مخرجات الفحص المحلية — لا تُرفع إلى المستودع
+qa-shots/
+qa-lighthouse/
+qa-contrast.json
+
+# بيئة المحرر والنظام
+.DS_Store
+.vscode/
+*.log
+.env
+.env.*

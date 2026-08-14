@@ -1,0 +1,17 @@
+---
+/** شرح مصطلح أجنبي عند أول ظهوره */
+interface Props {
+  ar: string;
+  en: string;
+  meaning: string;
+}
+const { ar, en, meaning } = Astro.props;
+---
+
+<div class="box-note" style="border-inline-start-color:var(--violet)">
+  <p class="box-h" style="color:var(--violet)">مصطلح</p>
+  <p style="margin-bottom:0">
+    <strong style="font-family:var(--f-ui);color:var(--ink)">{ar}</strong>
+    <bdi class="lat">({en})</bdi> — {meaning}
+  </p>
+</div>

@@ -1,0 +1,201 @@
+/* layout.css — الرأس، الدرج، الشريط السفلي، وتخطيط صفحة الدرس */
+
+/* ═══════════ الرأس ═══════════ */
+.site-header {
+  position: sticky; top: 0; z-index: var(--z-header);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.site-header .bar {
+  display: flex; align-items: center; gap: var(--sp-2);
+  min-height: 56px; min-inline-size: 0;
+}
+@media (min-width: 30rem) { .site-header .bar { gap: var(--sp-3); } }
+.site-header .brand {
+  font-family: var(--f-display); font-weight: 700; font-size: var(--t-sm);
+  text-decoration: none; color: var(--ink); line-height: 1.3;
+  min-inline-size: 0; flex: 0 1 auto;
+}
+/* الجزء الثاني من الاسم يظهر حين تتسع الشاشة، بلا قص بنقاط حذف */
+.brand-rest { display: none; }
+@media (min-width: 30rem) { .brand-rest { display: inline; } }
+.site-header .spacer { flex: 1 1 auto; min-inline-size: 0; }
+.hbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  min-inline-size: var(--tap); min-block-size: var(--tap); flex: 0 0 auto;
+  padding: 0 var(--sp-2); border: 0; background: transparent; cursor: pointer;
+  font-family: var(--f-ui); font-size: var(--t-sm); font-weight: 500;
+  color: var(--ink); text-decoration: none; border-radius: var(--r-sm);
+}
+.hbtn:hover { background: rgba(36, 30, 26, 0.06); color: var(--ink); }
+.hbtn svg { inline-size: 20px; block-size: 20px; }
+.hbtn--label { display: none; }
+@media (min-width: 48rem) { .hbtn--label { display: inline; } }
+
+/* ═══════════ درج المسار ═══════════ */
+.drawer {
+  position: fixed; inset: 0; z-index: var(--z-drawer);
+  display: none;
+}
+.drawer[open] { display: block; }
+.drawer::backdrop { background: rgba(36, 30, 26, 0.42); }
+.drawer-panel {
+  position: absolute; inset-block: 0; inset-inline-end: 0;
+  inline-size: min(23rem, 92vw);
+  background: var(--paper); overflow-y: auto;
+  padding: var(--sp-4) var(--sp-4) calc(var(--sp-8) + env(safe-area-inset-bottom));
+  box-shadow: var(--sh-2);
+}
+.drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-4); }
+.drawer-head h2 { font-size: var(--t-xl); margin: 0; font-family: var(--f-ui); }
+.drawer-close {
+  inline-size: var(--tap); block-size: var(--tap); border: 0; cursor: pointer;
+  background: rgba(36, 30, 26, 0.07); border-radius: var(--r-sm);
+  display: grid; place-items: center; color: var(--ink);
+}
+.drawer-close svg { inline-size: 22px; block-size: 22px; }
+.drawer-stage { margin-bottom: var(--sp-4); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); }
+.drawer-stage > .h {
+  font-family: var(--f-ui); font-weight: 600; font-size: var(--t-sm); margin-bottom: var(--sp-2);
+}
+.drawer-stage ol { list-style: none; padding: 0; margin: 0; }
+.drawer-stage li { margin-bottom: 2px; }
+.drawer-stage a {
+  display: flex; gap: var(--sp-2); align-items: baseline;
+  padding: var(--sp-2) var(--sp-2); border-radius: var(--r-sm);
+  font-family: var(--f-ui); font-size: var(--t-sm); line-height: 1.55;
+  color: var(--ink); text-decoration: none; min-block-size: 40px;
+}
+.drawer-stage a:hover { background: rgba(255, 255, 255, 0.7); color: var(--ink); }
+.drawer-stage a[aria-current='page'] { background: var(--ink); color: var(--ink-invert); }
+.drawer-stage a .num { font-size: var(--t-xs); opacity: 0.62; flex: 0 0 auto; }
+.drawer-stage a[data-done='1'] .num::after { content: ' ✓'; color: var(--ok); opacity: 1; }
+.drawer-stage a[aria-current='page'][data-done='1'] .num::after { color: #9BD9AF; }
+
+/* ═══════════ تخطيط صفحة الدرس ═══════════ */
+.lesson-layout { display: block; }
+@media (min-width: 64rem) {
+  .lesson-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    gap: var(--sp-7);
+    align-items: start;
+  }
+  .lesson-aside {
+    position: sticky; top: 76px;
+    max-block-size: calc(100vh - 96px); overflow-y: auto;
+    font-size: var(--t-sm);
+  }
+}
+.lesson-aside { display: none; }
+@media (min-width: 64rem) { .lesson-aside { display: block; } }
+
+.lesson-body { max-width: var(--measure); }
+.lesson-body p, .lesson-body li { font-size: var(--t-lg); line-height: var(--lh-body); }
+.lesson-body h2 { margin-top: var(--sp-7); }
+.lesson-body h3 { margin-top: var(--sp-6); font-family: var(--f-ui); }
+.lesson-body h2:first-child, .lesson-body h3:first-child { margin-top: 0; }
+
+/* ترويسة الدرس تحمل لون مرحلته */
+.lesson-hero {
+  border-radius: 0 0 var(--r-xl) var(--r-xl);
+  padding-block: var(--sp-5) var(--sp-6);
+  margin-bottom: var(--sp-6);
+}
+.lesson-hero .kicker {
+  font-family: var(--f-ui); font-size: var(--t-xs); font-weight: 500;
+  margin-bottom: var(--sp-3);
+}
+.lesson-hero h1 { font-size: clamp(1.625rem, 6.4vw, 2.375rem); margin-bottom: var(--sp-3); }
+.lesson-hero .facts {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4);
+  font-family: var(--f-ui); font-size: var(--t-xs); color: var(--ink-soft);
+}
+
+/* ═══════════ الشريط السفلي على الهاتف ═══════════ */
+.bottom-bar {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: var(--z-bar);
+  display: flex; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3) calc(var(--sp-2) + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--paper) 95%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+}
+.bottom-bar a, .bottom-bar button {
+  flex: 1 1 0; min-block-size: var(--tap);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  font-family: var(--f-ui); font-weight: 600; font-size: var(--t-sm);
+  border: 0; cursor: pointer; border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.72); color: var(--ink); text-decoration: none;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.bottom-bar .main { flex: 1.7 1 0; background: var(--ink); color: var(--ink-invert); box-shadow: none; }
+.bottom-bar .main[aria-pressed='true'] { background: var(--ok); }
+.bottom-bar a[aria-disabled='true'] { opacity: 0.4; pointer-events: none; }
+.bottom-bar svg { inline-size: 18px; block-size: 18px; }
+/* الشريط لا يغطي آخر المحتوى */
+.has-bottom-bar { padding-bottom: calc(var(--bar-h) + var(--sp-6) + env(safe-area-inset-bottom)); }
+@media (min-width: 64rem) {
+  .bottom-bar { display: none; }
+  .has-bottom-bar { padding-bottom: var(--sp-8); }
+}
+
+/* ═══════════ تنقل سابق/تالي على سطح المكتب ═══════════ */
+.prevnext { display: none; }
+@media (min-width: 64rem) {
+  .prevnext {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4);
+    margin-top: var(--sp-7); padding-top: var(--sp-5); border-top: 1px solid var(--line);
+  }
+  .prevnext a {
+    display: block; text-decoration: none; color: var(--ink);
+    padding: var(--sp-4); border-radius: var(--r-md); background: rgba(255,255,255,.55);
+    box-shadow: inset 0 0 0 1px var(--line-soft);
+  }
+  .prevnext a:hover { box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); }
+  .prevnext .l { font-family: var(--f-ui); font-size: var(--t-xs); color: var(--ink-mute); }
+  .prevnext .t { font-family: var(--f-ui); font-weight: 600; font-size: var(--t-sm); line-height: 1.5; }
+  .prevnext .next { text-align: end; }
+}
+
+/* ═══════════ التذييل ═══════════ */
+.site-footer {
+  margin-top: var(--sp-8); padding-block: var(--sp-6);
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--f-ui); font-size: var(--t-xs); color: var(--ink-mute);
+}
+.site-footer nav { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); margin-bottom: var(--sp-3); }
+.site-footer a { color: var(--ink-soft); text-decoration: none; min-block-size: 32px; display: inline-flex; align-items: center; }
+.site-footer a:hover { color: var(--ink); text-decoration: underline; }
+
+/* ═══════════ الترويسة الملونة العامة ═══════════ */
+.page-hero { padding-block: var(--sp-6) var(--sp-7); border-radius: 0 0 var(--r-xl) var(--r-xl); }
+.page-hero h1 { margin-bottom: var(--sp-4); }
+.page-hero .lead { font-size: var(--t-xl); color: var(--ink-soft); max-width: 34rem; line-height: 1.75; }
+
+/* ترويسة تنقسم إلى عمودين على سطح المكتب فلا تبقى مساحة ميتة */
+.hero-split { display: grid; gap: var(--sp-5); align-items: center; }
+@media (min-width: 64rem) {
+  .hero-split { grid-template-columns: 1fr 1fr; gap: var(--sp-7); }
+}
+
+/* ═══════════ البحث ═══════════ */
+.search-form { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+.search-input {
+  flex: 1; min-block-size: var(--tap); padding: var(--sp-3) var(--sp-4);
+  font-family: var(--f-ui); font-size: var(--t-base);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.75); color: var(--ink);
+}
+.search-input::placeholder { color: var(--ink-mute); }
+.search-result {
+  display: block; text-decoration: none; color: var(--ink);
+  padding: var(--sp-4); border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.6); margin-bottom: var(--sp-3);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.search-result:hover { box-shadow: inset 0 0 0 2px var(--ink); color: var(--ink); }
+.search-result .t { font-family: var(--f-ui); font-weight: 600; }
+.search-result .x { font-size: var(--t-sm); color: var(--ink-soft); line-height: 1.65; }
+.search-result mark { background: var(--s5-bg); color: var(--ink); padding: 0 2px; border-radius: 3px; }

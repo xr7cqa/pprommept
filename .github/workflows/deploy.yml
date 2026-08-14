@@ -1,0 +1,107 @@
+name: بناء ونشر موقع الكورس
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  SITE_ORIGIN: https://xr7cqa.github.io
+  SITE_BASE: /pprommept-/
+  PUPPETEER_SKIP_DOWNLOAD: '1'
+
+jobs:
+  build:
+    name: بناء وفحص
+    runs-on: ubuntu-latest
+    steps:
+      - name: جلب المستودع
+        uses: actions/checkout@v5
+
+      - name: تهيئة Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: تثبيت التبعيات
+        run: npm ci
+
+      - name: تثبيت متصفح الاختبارات
+        run: npx puppeteer browsers install chrome --path "$RUNNER_TEMP/chrome"
+
+      - name: تحديد مسار المتصفح
+        run: |
+          BIN=$(find "$RUNNER_TEMP/chrome" -type f -name chrome | head -n1)
+          echo "CHROME_PATH=$BIN" >> "$GITHUB_ENV"
+
+      - name: فحص الأنواع
+        run: npm run typecheck
+
+      - name: الفحص اللغوي والتحريري
+        run: npm run lint
+
+      - name: فحص التباين
+        run: node scripts/check-contrast.mjs
+
+      - name: بناء الموقع
+        run: npm run build
+
+      - name: فحص الملفات الممنوعة
+        run: npm run check:forbidden
+
+      - name: فحص الروابط الداخلية
+        run: npm run check:links
+
+      - name: فحص الروابط الخارجية
+        run: npm run check:external
+
+      - name: فحص الأصول
+        run: npm run check:assets
+
+      - name: اختبارات الواجهة
+        run: npm run test:ui
+
+      - name: اختبارات الوصول
+        run: npm run test:a11y
+
+      - name: التقاط المعاينات
+        run: npm run shots
+
+      - name: رفع المعاينات كأثر بناء
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-shots
+          path: qa-shots
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: تهيئة GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: رفع ناتج البناء فقط
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    name: نشر
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: النشر إلى GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

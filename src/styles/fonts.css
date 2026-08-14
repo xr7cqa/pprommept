@@ -1,0 +1,75 @@
+/* الخطوط محلية بالكامل — لا طلب شبكة خارجي عند فتح الموقع
+   ثلاث عائلات، لكل واحدة وظيفة ثابتة:
+   Noto Naskh Arabic → المتن · Readex Pro → الواجهة · Alexandria → العناوين الكبرى */
+
+/* ── المتن: Noto Naskh Arabic ── */
+@font-face {
+  font-family: 'Naskh';
+  src: url('../assets/fonts/noto-naskh-arabic-arabic-400-normal.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2010-2011, U+204F, U+2E41, U+FDFD;
+}
+@font-face {
+  font-family: 'Naskh';
+  src: url('../assets/fonts/noto-naskh-arabic-arabic-700-normal.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2010-2011, U+204F, U+2E41, U+FDFD;
+}
+@font-face {
+  font-family: 'Naskh';
+  src: url('../assets/fonts/noto-naskh-arabic-latin-400-normal.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Naskh';
+  src: url('../assets/fonts/noto-naskh-arabic-latin-700-normal.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/* ── الواجهة: Readex Pro ── */
+@font-face {
+  font-family: 'Readex';
+  src: url('../assets/fonts/readex-pro-arabic-400-normal.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2010-2011, U+204F, U+2E41, U+FDFD;
+}
+@font-face {
+  font-family: 'Readex';
+  src: url('../assets/fonts/readex-pro-arabic-500-normal.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2010-2011, U+204F, U+2E41, U+FDFD;
+}
+@font-face {
+  font-family: 'Readex';
+  src: url('../assets/fonts/readex-pro-arabic-600-normal.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2010-2011, U+204F, U+2E41, U+FDFD;
+}
+@font-face {
+  font-family: 'Readex';
+  src: url('../assets/fonts/readex-pro-latin-400-normal.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Readex';
+  src: url('../assets/fonts/readex-pro-latin-500-normal.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Readex';
+  src: url('../assets/fonts/readex-pro-latin-600-normal.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
+/* ── العناوين الكبرى: Alexandria ── */
+@font-face {
+  font-family: 'Alexandria';
+  src: url('../assets/fonts/alexandria-arabic-700-normal.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+2010-2011, U+204F, U+2E41, U+FDFD;
+}
+@font-face {
+  font-family: 'Alexandria';
+  src: url('../assets/fonts/alexandria-latin-700-normal.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}

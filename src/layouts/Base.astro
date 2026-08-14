@@ -1,0 +1,166 @@
+---
+import '../styles/fonts.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/components.css';
+import '../styles/layout.css';
+
+import naskh400 from '../assets/fonts/noto-naskh-arabic-arabic-400-normal.woff2';
+import readex600 from '../assets/fonts/readex-pro-arabic-600-normal.woff2';
+import alex700 from '../assets/fonts/alexandria-arabic-700-normal.woff2';
+
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import PathDrawer from '../components/PathDrawer.astro';
+import { url } from '../lib/url';
+
+interface Props {
+  title: string;
+  description: string;
+  /** لون خلفية الترويسة إن وُجدت */
+  bodyClass?: string;
+  /** إخفاء درج المسار في صفحات لا تحتاجه */
+  drawer?: boolean;
+  /** فهرسة البحث */
+  indexable?: boolean;
+}
+
+const {
+  title,
+  description,
+  bodyClass = '',
+  drawer = true,
+  indexable = true,
+} = Astro.props;
+
+const fullTitle = title === 'الرئيسية' ? 'صناعة المحتوى بالذكاء الاصطناعي' : `${title} — صناعة المحتوى بالذكاء الاصطناعي`;
+---
+
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#FBF6EE" />
+    <link rel="icon" href={url('assets/favicon.svg')} type="image/svg+xml" />
+    <link rel="preload" href={naskh400} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={readex600} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={alex700} as="font" type="font/woff2" crossorigin />
+    {!indexable && <meta name="robots" content="noindex" />}
+  </head>
+  <body class={bodyClass}>
+    <a class="skip" href="#main">تخطي إلى المحتوى</a>
+    <Header drawer={drawer} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    {drawer && <PathDrawer />}
+
+    <script>
+      import { read, update, storageAvailable } from '../lib/progress';
+
+      /* ── درج المسار ── */
+      const dlg = document.getElementById('path-drawer') as HTMLDialogElement | null;
+      const openers = document.querySelectorAll<HTMLElement>('[data-open-drawer]');
+      openers.forEach((b) =>
+        b.addEventListener('click', () => {
+          if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+        }),
+      );
+      document.querySelectorAll<HTMLElement>('[data-close-drawer]').forEach((b) =>
+        b.addEventListener('click', () => dlg?.close()),
+      );
+      dlg?.addEventListener('click', (e) => {
+        if (e.target === dlg) dlg.close();
+      });
+
+      /* ── وسم الدروس المنجزة داخل الدرج وبطاقات الدروس ── */
+      function paintDone() {
+        const s = read();
+        document.querySelectorAll<HTMLElement>('[data-lesson-id]').forEach((el) => {
+          const id = el.dataset.lessonId!;
+          el.dataset.done = s.done[id] ? '1' : '0';
+        });
+      }
+      paintDone();
+
+      /* ── تعطيل ميزات التقدم بلطف عند تعذر التخزين ── */
+      if (!storageAvailable()) {
+        document.querySelectorAll<HTMLElement>('[data-needs-storage]').forEach((el) => {
+          el.hidden = true;
+        });
+        document.querySelectorAll<HTMLElement>('[data-storage-warning]').forEach((el) => {
+          el.hidden = false;
+        });
+      }
+
+      /* ── تسجيل آخر درف تمت زيارته ── */
+      const page = document.querySelector<HTMLElement>('[data-lesson-page]');
+      if (page) {
+        const { lessonId, lessonTitle, lessonStage } = page.dataset;
+        if (lessonId && lessonTitle) {
+          update((s) => {
+            s.last = {
+              id: lessonId,
+              title: lessonTitle,
+              href: location.pathname,
+              stage: Number(lessonStage ?? 1),
+              ts: Date.now(),
+            };
+          });
+        }
+      }
+
+      /* ── قوائم الفحص ── */
+      document.querySelectorAll<HTMLInputElement>('input[type="checkbox"][data-check-key]').forEach((box) => {
+        const key = box.dataset.checkKey!;
+        const s = read();
+        box.checked = Boolean(s.checks[key]);
+        box.addEventListener('change', () => {
+          update((st) => {
+            if (box.checked) st.checks[key] = true;
+            else delete st.checks[key];
+          });
+        });
+      });
+
+      /* ── أزرار النسخ ── */
+      document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const sel = btn.dataset.copy!;
+          const src = document.querySelector<HTMLElement>(sel);
+          const text = src?.dataset.raw ?? src?.innerText ?? '';
+          const label = btn.querySelector<HTMLElement>('[data-copy-label]');
+          const original = label?.textContent ?? '';
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+              document.execCommand('copy');
+            } catch {
+              /* لا شيء نفعله أكثر من ذلك */
+            }
+            ta.remove();
+          }
+          btn.dataset.state = 'done';
+          if (label) label.textContent = 'تم النسخ';
+          window.setTimeout(() => {
+            btn.dataset.state = '';
+            if (label) label.textContent = original;
+          }, 1800);
+        });
+      });
+    </script>
+  </body>
+</html>

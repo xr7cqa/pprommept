@@ -1,0 +1,21 @@
+---
+import Icon from './Icon.astro';
+import { TELEGRAM_URL, TELEGRAM_HANDLE } from '../lib/stages';
+
+/** بطاقة الدعم — تظهر في ثلاثة مواضع مقصودة فقط:
+    مقدمة الكورس · منتصف المسار بعد مرحلة الذكاء الاصطناعي · صفحة الإتمام */
+interface Props {
+  heading: string;
+  text: string;
+}
+const { heading, text } = Astro.props;
+---
+
+<aside class="support">
+  <h3>{heading}</h3>
+  <p>{text}</p>
+  <a class="tg-link" href={TELEGRAM_URL} rel="noopener">
+    <Icon name="telegram" size={22} label="تيليجرام" />
+    <bdi>{TELEGRAM_HANDLE}</bdi>
+  </a>
+</aside>
