@@ -40,10 +40,38 @@ const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
 
       <Content components={C} />
 
+      <div data-has-fields hidden>
+        <p class="small muted" data-save-note style="margin-top:var(--sp-5)">
+          ما تكتبه يُحفظ في متصفحك وحده، ولا يُرسل إلى أي مكان
+        </p>
+
+        <div class="btn-row" style="margin-top:var(--sp-3)">
+          <button class="btn" type="button" data-copy-fields>
+            <Icon name="copy" size={18} />
+            <span data-copy-fields-label>انسخ ما كتبت</span>
+          </button>
+          <button class="btn btn--quiet" type="button" data-export="md">نزّل بصيغة MD</button>
+          <button class="btn btn--quiet" type="button" data-export="txt">نزّل بصيغة TXT</button>
+          <button class="btn btn--quiet" type="button" data-clear-fields>امسح حقول هذا القالب</button>
+        </div>
+
+        <div class="box-warn" data-confirm-clear hidden style="margin-top:var(--sp-4)">
+          <p class="box-h">تأكيد المسح</p>
+          <p>سيُمسح ما كتبته في هذا القالب وحده، ولا يمكن التراجع. بقية تقدمك لا يتأثر</p>
+          <div class="btn-row">
+            <button class="btn" type="button" data-clear-yes>نعم، امسح</button>
+            <button class="btn btn--quiet" type="button" data-clear-no>تراجع</button>
+          </div>
+        </div>
+      </div>
+
       <div class="btn-row" style="margin-top:var(--sp-6)" data-needs-storage>
         <button class="btn" type="button" data-app-start aria-pressed="false">
           <Icon name="check" size={18} />
           <span data-app-label>بدأت هذا القالب</span>
+        </button>
+        <button class="btn btn--quiet" type="button" data-app-done aria-pressed="false" data-has-fields hidden>
+          <span data-app-done-label>أنهيت هذا القالب</span>
         </button>
         {concept && <a class="btn btn--quiet" href={routes.lesson(concept.id)}>اقرأ الدرس المرتبط</a>}
       </div>
@@ -68,26 +96,44 @@ const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
   </div>
 </Base>
 
-<script define:vars={{ appId: entry.id }}>
+<script define:vars={{ appId: entry.id, appTitle: d.title }}>
   window.__appId = appId;
+  window.__appTitle = appTitle;
 </script>
 
 <script>
-  import { read, update } from '../../lib/progress';
-  const id = (window as unknown as { __appId: string }).__appId;
-  const btns = document.querySelectorAll<HTMLButtonElement>('[data-app-start]');
+  import { read, update, storageAvailable, FIELD_MAX } from '../../lib/progress';
+
+  const w = window as unknown as { __appId: string; __appTitle: string };
+  const id = w.__appId;
+  const title = w.__appTitle;
+
+  const startBtns = document.querySelectorAll<HTMLButtonElement>('[data-app-start]');
+  const doneBtns = document.querySelectorAll<HTMLButtonElement>('[data-app-done]');
+  const fields = Array.from(document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-field]'));
+
+  /* الأدوات تظهر فقط حين يحتوي القالب حقولا فعلا */
+  if (fields.length > 0) {
+    document.querySelectorAll('[data-has-fields]').forEach((el) => el.removeAttribute('hidden'));
+  }
 
   function paint() {
     const s = read();
-    const on = Boolean(s.apps[id]);
-    btns.forEach((b) => {
-      b.setAttribute('aria-pressed', String(on));
+    const started = Boolean(s.apps[id]);
+    const done = Boolean(s.appsDone[id]);
+    startBtns.forEach((b) => {
+      b.setAttribute('aria-pressed', String(started));
       const l = b.querySelector<HTMLElement>('[data-app-label]');
-      if (l) l.textContent = on ? 'بدأته' : 'بدأت هذا القالب';
+      if (l) l.textContent = started ? 'بدأته' : 'بدأت هذا القالب';
+    });
+    doneBtns.forEach((b) => {
+      b.setAttribute('aria-pressed', String(done));
+      const l = b.querySelector<HTMLElement>('[data-app-done-label]');
+      if (l) l.textContent = done ? 'أنهيته' : 'أنهيت هذا القالب';
     });
   }
 
-  btns.forEach((b) =>
+  startBtns.forEach((b) =>
     b.addEventListener('click', () => {
       update((s) => {
         if (s.apps[id]) delete s.apps[id];
@@ -97,5 +143,138 @@ const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
     }),
   );
 
+  doneBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      update((s) => {
+        if (s.appsDone[id]) delete s.appsDone[id];
+        else {
+          s.appsDone[id] = Date.now();
+          // إنهاء القالب يعني بدأه ضمنا
+          if (!s.apps[id]) s.apps[id] = Date.now();
+        }
+      });
+      paint();
+    }),
+  );
+
+  /* ===== الحقول: تعبئة أولية ثم حفظ تلقائي ===== */
+
+  const key = (name: string) => `${id}:${name}`;
+
+  function restore() {
+    const s = read();
+    for (const el of fields) {
+      const name = el.dataset['field'];
+      if (!name) continue;
+      const v = s.fields[key(name)];
+      if (typeof v === 'string') el.value = v;
+    }
+  }
+
+  let timer: number | undefined;
+  function scheduleSave() {
+    window.clearTimeout(timer);
+    // تأخير قصير حتى لا نكتب في التخزين عند كل ضغطة مفتاح
+    timer = window.setTimeout(() => {
+      update((s) => {
+        for (const el of fields) {
+          const name = el.dataset['field'];
+          if (!name) continue;
+          const v = el.value.slice(0, FIELD_MAX);
+          if (v.trim() === '') delete s.fields[key(name)];
+          else s.fields[key(name)] = v;
+        }
+        // أول كتابة تعني أن القالب بدأ
+        const anyFilled = fields.some((el) => el.value.trim() !== '');
+        if (anyFilled && !s.apps[id]) s.apps[id] = Date.now();
+      });
+      paint();
+    }, 400);
+  }
+
+  for (const el of fields) el.addEventListener('input', scheduleSave);
+
+  /* ===== النسخ والتنزيل ===== */
+
+  function collect(): { label: string; value: string }[] {
+    const out: { label: string; value: string }[] = [];
+    for (const el of fields) {
+      const name = el.dataset['field'];
+      if (!name) continue;
+      const lab = document.querySelector<HTMLLabelElement>(`label[for="f-${name}"]`);
+      out.push({ label: lab?.textContent?.trim() ?? name, value: el.value.trim() });
+    }
+    return out;
+  }
+
+  function asText(kind: 'md' | 'txt'): string {
+    const rows = collect();
+    const head = kind === 'md' ? `# ${title}\n` : `${title}\n${'='.repeat(title.length)}\n`;
+    const body = rows
+      .map((r) => {
+        const v = r.value === '' ? '—' : r.value;
+        return kind === 'md' ? `\n## ${r.label}\n\n${v}\n` : `\n${r.label}:\n${v}\n`;
+      })
+      .join('');
+    return head + body;
+  }
+
+  document.querySelector('[data-copy-fields]')?.addEventListener('click', async () => {
+    const label = document.querySelector<HTMLElement>('[data-copy-fields-label]');
+    try {
+      await navigator.clipboard.writeText(asText('txt'));
+      if (label) label.textContent = 'نُسخ';
+    } catch {
+      if (label) label.textContent = 'تعذّر النسخ';
+    }
+    window.setTimeout(() => {
+      if (label) label.textContent = 'انسخ ما كتبت';
+    }, 1600);
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-export]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const kind = b.dataset['export'] === 'md' ? 'md' : 'txt';
+      const blob = new Blob([asText(kind)], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${id}.${kind}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }),
+  );
+
+  /* ===== المسح بتأكيد ===== */
+
+  const confirmBox = document.querySelector<HTMLElement>('[data-confirm-clear]');
+  document.querySelector('[data-clear-fields]')?.addEventListener('click', () => {
+    confirmBox?.removeAttribute('hidden');
+    confirmBox?.querySelector<HTMLButtonElement>('[data-clear-yes]')?.focus();
+  });
+  document.querySelector('[data-clear-no]')?.addEventListener('click', () => {
+    confirmBox?.setAttribute('hidden', '');
+  });
+  document.querySelector('[data-clear-yes]')?.addEventListener('click', () => {
+    update((s) => {
+      for (const el of fields) {
+        const name = el.dataset['field'];
+        if (name) delete s.fields[key(name)];
+      }
+      delete s.appsDone[id];
+    });
+    for (const el of fields) el.value = '';
+    confirmBox?.setAttribute('hidden', '');
+    paint();
+  });
+
+  if (!storageAvailable()) {
+    const note = document.querySelector<HTMLElement>('[data-save-note]');
+    if (note) note.textContent = 'متصفحك يمنع الحفظ المحلي، فما تكتبه لن يبقى بعد إغلاق الصفحة. انسخه أو نزّله قبل أن تغادر';
+  }
+
+  restore();
   paint();
 </script>

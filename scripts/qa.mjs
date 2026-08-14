@@ -15,6 +15,7 @@ const STEPS = [
   ['فحص الروابط الخارجية', 'node', ['scripts/check-external.mjs']],
   ['فحص الأصول', 'node', ['scripts/check-assets.mjs']],
   ['اختبارات الواجهة', 'node', ['scripts/test-ui.mjs']],
+  ['اختبارات القوالب التفاعلية', 'node', ['scripts/test-templates.mjs']],
   ['اختبارات الوصول', 'node', ['scripts/test-a11y.mjs']],
 ];
 
