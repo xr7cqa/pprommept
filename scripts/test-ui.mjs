@@ -4,7 +4,7 @@
  */
 import puppeteer from 'puppeteer';
 import { withServer } from './serve.mjs';
-import { SITE, CHROME, ok, fail, info } from './config.mjs';
+import { SITE, BASE, CHROME, ok, fail, info } from './config.mjs';
 
 let pass = 0;
 const failures = [];
@@ -253,16 +253,16 @@ async function main() {
   await check('18 · كل الروابط والأصول تحت المسار الفرعي', async () => {
     const page = await newPage(browser);
     await page.goto(firstLessonUrl, { waitUntil: 'networkidle0' });
-    const bad = await page.evaluate(() => {
+    const bad = await page.evaluate((base) => {
       const out = [];
       document.querySelectorAll('[href],[src]').forEach((el) => {
         const v = el.getAttribute('href') ?? el.getAttribute('src');
         if (!v) return;
         if (/^(https?:|mailto:|data:|#)/.test(v)) return;
-        if (!v.startsWith('/pprommept-/')) out.push(v);
+        if (!v.startsWith(base)) out.push(v);
       });
       return out;
-    });
+    }, BASE);
     assert(bad.length === 0, `روابط خارج المسار: ${bad.join(', ')}`);
     await page.close();
   });
@@ -608,7 +608,7 @@ async function main() {
   // ── ترقية بيانات من إصدار أقدم ──
   await check('36 · بيانات الإصدار الأقدم تُرقّى بلا فقدان', async () => {
     const page = await freshPage(browser);
-    await page.evaluate(() =>
+    await page.evaluate((base) =>
       localStorage.setItem(
         'pa.course',
         JSON.stringify({
@@ -618,9 +618,10 @@ async function main() {
           favPrompts: {},
           checks: { 'k:0': true },
           apps: {},
-          last: { id: 'x-old-lesson', title: 'درس قديم', href: '/pprommept-/course/01-empty-order/', stage: 1, ts: 1 },
+          last: { id: 'x-old-lesson', title: 'درس قديم', href: `${base}course/01-empty-order/`, stage: 1, ts: 1 },
         }),
       ),
+      BASE,
     );
     await page.goto(SITE + 'settings/', { waitUntil: 'networkidle0' });
     const after = await page.evaluate(() => {

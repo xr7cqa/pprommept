@@ -3,10 +3,10 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 
 // موقع الكورس يُنشر على GitHub Pages تحت مسار فرعي باسم المستودع.
-// المستودع الفعلي المتاح هو xr7cqa/pprommept- ولذلك المسار الافتراضي هو /pprommept-/
+// المسار الافتراضي هو اسم المستودع xr7cqa/pprommept، ويُشتق في سير النشر من اسم المستودع نفسه
 // وإذا أعيدت تسمية المستودع يكفي تغيير هذين المتغيرين أو تمريرهما من بيئة البناء.
 const SITE = process.env.SITE_ORIGIN ?? 'https://xr7cqa.github.io';
-const BASE = process.env.SITE_BASE ?? '/pprommept-/';
+const BASE = process.env.SITE_BASE ?? '/pprommept/';
 
 export default defineConfig({
   site: SITE,

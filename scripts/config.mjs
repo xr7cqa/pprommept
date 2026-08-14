@@ -1,5 +1,5 @@
 /** إعدادات مشتركة لكل فحوص الجودة */
-export const BASE = process.env.SITE_BASE ?? '/pprommept-/';
+export const BASE = process.env.SITE_BASE ?? '/pprommept/';
 export const PORT = Number(process.env.QA_PORT ?? 4321);
 export const ORIGIN = `http://127.0.0.1:${PORT}`;
 export const SITE = ORIGIN + BASE;
