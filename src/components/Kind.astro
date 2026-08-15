@@ -15,7 +15,7 @@ const { kind, quiet = false } = Astro.props;
 const meta: Record<Props['kind'], { label: string; hint: string }> = {
   core: { label: 'درس أساسي', hint: 'يدخل في حساب تقدمك' },
   apply: { label: 'تطبيق', hint: 'تخرج منه بمخرج تملكه' },
-  case: { label: 'دراسة حالة', hint: 'اختيارية' },
+  case: { label: 'تفكيك تطبيقي', hint: 'اختياري' },
   reference: { label: 'مرجع اختياري', hint: 'يُفتح وقت الحاجة' },
   template: { label: 'قالب', hint: 'تملؤه بنفسك' },
   prompt: { label: 'برومبت', hint: 'تنسخه إلى الأداة' },
@@ -65,7 +65,7 @@ const m = meta[kind];
     background: currentColor;
   }
 
-  /* الحالة: مثلث */
+  /* التفكيك التطبيقي: مثلث */
   .kind--case {
     background: var(--s5-bg);
     color: var(--s5-ink);

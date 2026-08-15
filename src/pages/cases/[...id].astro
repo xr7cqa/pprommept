@@ -24,7 +24,7 @@ const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
   <div class="page-hero" style={`background:var(--${d.tone}-bg)`}>
     <div class="wrap">
       <p class="eyebrow" style={`color:var(--${d.tone}-ink)`}>
-        <a href={routes.cases()} style={`color:var(--${d.tone}-ink);text-decoration:none`}>دراسات الحالة</a>
+        <a href={routes.cases()} style={`color:var(--${d.tone}-ink);text-decoration:none`}>التفكيكات التطبيقية</a>
       </p>
       <h1>{d.title}</h1>
       <p class="lead">{d.summary}</p>
@@ -34,7 +34,7 @@ const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
           <dd style="margin:0;font-size:var(--t-base)">{d.field}</dd>
         </div>
         <div style="background:rgba(255,255,255,.55);border-radius:var(--r-md);padding:var(--sp-4)">
-          <dt class="eyebrow" style={`color:var(--${d.tone}-ink)`}>أقوى دليل في الحالة</dt>
+          <dt class="eyebrow" style={`color:var(--${d.tone}-ink)`}>أقوى سند في هذا التفكيك</dt>
           <dd style="margin:0;font-size:var(--t-base)">{d.evidence}</dd>
         </div>
       </dl>
@@ -53,20 +53,20 @@ const concept = d.concept ? lessons.find((l) => l.id === d.concept) : undefined;
         </p>
       )}
 
-      <nav class="prevnext" aria-label="التنقل بين الحالات">
+      <nav class="prevnext" aria-label="التنقل بين التفكيكات">
         {prev ? (
           <a href={routes.case(prev.id)} rel="prev">
             <span class="l">السابق</span><span class="t">{prev.data.title}</span>
           </a>
         ) : (
-          <a href={routes.cases()}><span class="l">عودة</span><span class="t">دراسات الحالة</span></a>
+          <a href={routes.cases()}><span class="l">عودة</span><span class="t">التفكيكات التطبيقية</span></a>
         )}
         {next ? (
           <a href={routes.case(next.id)} rel="next" class="next">
             <span class="l">التالي</span><span class="t">{next.data.title}</span>
           </a>
         ) : (
-          <a href={routes.cases()} class="next"><span class="l">عودة</span><span class="t">دراسات الحالة</span></a>
+          <a href={routes.cases()} class="next"><span class="l">عودة</span><span class="t">التفكيكات التطبيقية</span></a>
         )}
       </nav>
     </article>

@@ -11,6 +11,7 @@ const STEPS = [
   ['فحص التباين', 'node', ['scripts/check-contrast.mjs']],
   ['بناء الإنتاج', 'npm', ['run', 'build']],
   ['فحص الملفات الممنوعة', 'node', ['scripts/check-forbidden.mjs']],
+  ['فحص منع الفهرسة والتسمية', 'node', ['scripts/check-noindex.mjs']],
   ['فحص الروابط الداخلية', 'node', ['scripts/check-links.mjs']],
   ['فحص الروابط الخارجية', 'node', ['scripts/check-external.mjs']],
   ['فحص مكتبة البرومبتات', 'node', ['scripts/check-prompts.mjs']],

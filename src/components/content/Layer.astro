@@ -1,7 +1,7 @@
 ---
 /**
- * طبقة داخل دراسة حالة.
- * الفصل بين الموثق والتفسير والمبدأ مفروض بالبنية لا بنية الكاتب،
+ * طبقة داخل تفكيك تطبيقي.
+ * الفصل بين ما يمكن التحقق منه والتفسير والمبدأ مفروض بالبنية لا بنية الكاتب،
  * حتى لا يُقرأ الرأي على أنه حقيقة. لكل طبقة شكل مختلف يميّزها بصريا.
  */
 interface Props {
@@ -12,8 +12,8 @@ const { kind, title } = Astro.props;
 
 const meta: Record<Props['kind'], { label: string; note: string }> = {
   documented: {
-    label: 'الموثق',
-    note: 'ما صدر عن الجهة نفسها أو نقلته تغطية مهنية متعددة',
+    label: 'ما يمكن التحقق منه',
+    note: 'ما تعلنه المنصة نفسها، أو نمط ظاهر تستطيع ملاحظته بنفسك',
   },
   reading: {
     label: 'قراءتنا',
@@ -21,7 +21,7 @@ const meta: Record<Props['kind'], { label: string; note: string }> = {
   },
   principle: {
     label: 'المبدأ الذي ينتقل إليك',
-    note: 'ما يبقى صالحا لو تغيّرت المنصة والحالة كلها',
+    note: 'ما يبقى صالحا لو تغيّرت المنصة والمثال كله',
   },
 };
 const m = meta[kind];
@@ -67,7 +67,7 @@ const heading = title ?? m.label;
     margin-bottom: 0;
   }
 
-  /* الموثق: خط سميك مصمت — أثقل الطبقات بصريا */
+  /* ما يمكن التحقق منه: خط سميك مصمت — أثقل الطبقات بصريا */
   .layer--documented {
     background: var(--s4-bg);
     border-inline-start: 5px solid var(--s4-ink);
