@@ -14,7 +14,7 @@ const captions: Record<Props['kind'], string> = {
   funnel: 'من محتوى يُقرأ إلى ثقة تُبنى إلى فرصة تصل',
   pillars: 'كل عمود يخدم هدفا مختلفا، والتوازن بينها يمنع أن يصير حسابك إعلانا',
   delegation: 'كلما نزلت في السلّم زادت المادة التي تعطيها، وارتفعت جودة ما يخرج منها',
-  layers: 'اقرأ كل حالة على ثلاث طبقات، ولا تخلط التفسير بالموثق',
+  layers: 'اقرأ كل تفكيك على ثلاث طبقات، ولا تخلط التفسير بما يمكن التحقق منه',
 };
 const cap = caption ?? captions[kind];
 ---
@@ -194,21 +194,22 @@ const cap = caption ?? captions[kind];
   )}
 
   {kind === 'layers' && (
-    <svg viewBox="0 0 320 168" role="img" aria-label="ثلاث طبقات لقراءة أي حالة: الموثق ثم القراءة ثم المبدأ القابل للنقل">
-      <title>طبقات قراءة الحالة</title>
+    <svg viewBox="0 0 320 168" role="img" aria-label="ثلاث طبقات لقراءة أي تفكيك: ما يمكن التحقق منه ثم القراءة ثم المبدأ القابل للنقل">
+      <title>طبقات قراءة التفكيك</title>
+      {/* الاتجاه عربي: الخط الجانبي على اليمين كما في مكوّن Layer، والنص يبدأ منه */}
       <g font-family="Readex, sans-serif" font-size="12" fill="#241E1A">
         <rect x="10" y="8" width="300" height="42" rx="9" fill="#E2ECF4" />
-        <rect x="10" y="8" width="5" height="42" fill="#1C5C86" />
-        <text x="28" y="27" font-weight="600" fill="#1C5C86">الموثق</text>
-        <text x="28" y="43" font-size="10.5" fill="#5E5148">ما صدر عن الجهة نفسها</text>
+        <rect x="305" y="8" width="5" height="42" fill="#1C5C86" />
+        <text x="292" y="27" font-weight="600" fill="#1C5C86">ما يمكن التحقق منه</text>
+        <text x="292" y="43" font-size="10.5" fill="#5E5148">ما تعلنه المنصة أو نمط ظاهر</text>
 
         <rect x="10" y="60" width="300" height="42" rx="9" fill="none" stroke="#C9B8A3" stroke-width="1.5" stroke-dasharray="5 4" />
-        <text x="28" y="79" font-weight="600" fill="#5E5148">قراءتنا</text>
-        <text x="28" y="95" font-size="10.5" fill="#5E5148">تفسير قد يكون خاطئا</text>
+        <text x="292" y="79" font-weight="600" fill="#5E5148">قراءتنا</text>
+        <text x="292" y="95" font-size="10.5" fill="#5E5148">تفسير قد يكون خاطئا</text>
 
-        <path d="M10 121 H292 L310 139 V154 H10 Z" fill="#EDE6F3" />
-        <text x="28" y="139" font-weight="600" fill="#5B4A80">المبدأ الذي ينتقل إليك</text>
-        <text x="28" y="152" font-size="10.5" fill="#5E5148">يبقى صالحا لو تغيّرت الحالة كلها</text>
+        <path d="M310 121 H28 L10 139 V154 H310 Z" fill="#EDE6F3" />
+        <text x="292" y="139" font-weight="600" fill="#5B4A80">المبدأ الذي ينتقل إليك</text>
+        <text x="292" y="152" font-size="10.5" fill="#5E5148">يبقى صالحا لو تغيّر المثال كله</text>
       </g>
     </svg>
   )}

@@ -9,16 +9,17 @@ const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.dat
 ---
 
 <Base
-  title="دراسات الحالة"
-  description="حالات حقيقية مفصولة إلى ثلاث طبقات: ما هو موثق، وما هو تفسير، والمبدأ الذي ينتقل إلى عملك"
+  title="التفكيكات التطبيقية"
+  description="أنماط وممارسات مفكّكة إلى ثلاث طبقات: ما يمكن التحقق منه، وقراءتنا له، والمبدأ الذي ينتقل إلى عملك"
 >
   <section class="page-hero" style="background:var(--s5-bg)">
     <div class="wrap">
       <p class="eyebrow" style="color:var(--s5-ink)">مكتبة مرجعية</p>
-      <h1>دراسات الحالة</h1>
+      <h1>التفكيكات التطبيقية</h1>
       <p class="lead">
-        كل حالة هنا مفصولة إلى ثلاث طبقات: ما هو موثق، وقراءتنا له، والمبدأ الذي ينتقل إلى
-        عملك. الطبقة الثانية تفسير قد يكون خاطئا، والثالثة هي سبب وجود الحالة أصلا
+        ليست وقائع منسوبة إلى أشخاص أو مشاريع بعينها، بل أنماط وممارسات نفكّكها على ثلاث
+        طبقات: ما يمكن التحقق منه، وقراءتنا له، والمبدأ الذي ينتقل إلى عملك. الطبقة الثانية
+        تفسير قد يكون خاطئا، والثالثة هي سبب وجود الصفحة أصلا
       </p>
       <p class="small muted" style="margin-top:var(--sp-4)">
         قراءة هذه الصفحات لا تدخل في حساب تقدمك
@@ -43,7 +44,7 @@ const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.dat
               <span style="display:block;margin-bottom:6px"><Kind kind="case" /></span>
               <span class="t" style={`color:var(--${c.data.tone}-ink)`}>{c.data.title}</span>
               <span class="d" style="display:block;margin-top:4px">{c.data.summary}</span>
-              <span class="meta">{c.data.field} · دليلها: {c.data.evidence}</span>
+              <span class="meta">{c.data.field} · سندها: {c.data.evidence}</span>
             </span>
           </a>
         ))
@@ -53,8 +54,8 @@ const items = (await getCollection('cases')).sort((a, b) => a.data.order - b.dat
     <div class="box-warn" style="margin-top:var(--sp-7)">
       <p class="box-h">اقرأها لتأخذ المبدأ لا لتقلّد الشكل</p>
       <p style="margin-bottom:0">
-        أكثر ما يُفسد الاستفادة من دراسات الحالة هو نقل الشكل: نفس نوع المقطع، ونفس نبرة
-        المزاح، ونفس التنسيق. الشكل مرتبط بجمهور تلك الحالة وظرفها ووقتها، والمبدأ وحده هو
+        أكثر ما يُفسد الاستفادة من هذه الصفحات هو نقل الشكل: نفس نوع المقطع، ونفس نبرة
+        المزاح، ونفس التنسيق. الشكل مرتبط بجمهور ذلك المثال وظرفه ووقته، والمبدأ وحده هو
         ما ينتقل. ولهذا وُضع المبدأ في كل صفحة في صندوق منفصل تحت العنوان نفسه
       </p>
     </div>

@@ -108,7 +108,7 @@ export const GET: APIRoute = async () => {
       t: c.data.title,
       x: c.data.summary,
       h: routes.case(c.id),
-      k: 'دراسة حالة',
+      k: 'تفكيك تطبيقي',
       n: normalizeAr(
         [c.data.title, c.data.summary, c.data.subject, c.data.field, c.data.principle, c.data.keywords.join(' '), body].join(' '),
       ),

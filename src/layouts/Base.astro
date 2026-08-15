@@ -22,8 +22,6 @@ interface Props {
   bodyClass?: string;
   /** إخفاء درج المسار في صفحات لا تحتاجه */
   drawer?: boolean;
-  /** فهرسة البحث */
-  indexable?: boolean;
 }
 
 const {
@@ -31,7 +29,6 @@ const {
   description,
   bodyClass = '',
   drawer = true,
-  indexable = true,
 } = Astro.props;
 
 const fullTitle = title === 'الرئيسية' ? 'صناعة المحتوى بالذكاء الاصطناعي' : `${title} — صناعة المحتوى بالذكاء الاصطناعي`;
@@ -53,7 +50,10 @@ const fullTitle = title === 'الرئيسية' ? 'صناعة المحتوى با
     <link rel="preload" href={naskh400} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={readex600} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={alex700} as="font" type="font/woff2" crossorigin />
-    {!indexable && <meta name="robots" content="noindex" />}
+    <!-- الموقع كورس مدفوع بلا تسجيل دخول: يُمنع إدراجه في محركات البحث كليا.
+         هذا ليس حماية للرابط، بل منع فهرسة. المنع مكرر في robots.txt -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="googlebot" content="noindex, nofollow" />
   </head>
   <body class={bodyClass}>
     <a class="skip" href="#main">تخطي إلى المحتوى</a>
